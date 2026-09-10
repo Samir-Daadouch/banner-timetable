@@ -227,7 +227,11 @@ function renderCalendar(records) {
   const gridStart = Math.max(0, Math.floor((minStart - 60) / 60) * 60);
   const gridEnd = Math.min(24 * 60, Math.ceil((maxEnd + 60) / 60) * 60);
   const hourCount = Math.max(1, (gridEnd - gridStart) / 60);
-  const hourHeight = Math.max(58, Math.min(76, 640 / hourCount));
+  const mobileWidth = window.matchMedia('(max-width: 600px)').matches;
+  const tabletWidth = window.matchMedia('(max-width: 900px)').matches;
+  const hourHeight = mobileWidth ? Math.max(38, Math.min(48, 420 / hourCount))
+    : tabletWidth ? Math.max(48, Math.min(60, 520 / hourCount))
+    : Math.max(58, Math.min(76, 640 / hourCount));
   const gridHeight = hourCount * hourHeight;
   const colors = courseColors(records);
 
@@ -298,7 +302,8 @@ function renderCalendar(records) {
 
       card.className = 'class-card' + (duration < 70 ? ' compact' : '');
       const top = ((event.start - gridStart) / 60) * hourHeight;
-      const height = Math.max(62, (duration / 60) * hourHeight - 8);
+      const minimumCardHeight = mobileWidth ? 34 : tabletWidth ? 46 : 62;
+      const height = Math.max(minimumCardHeight, (duration / 60) * hourHeight - (mobileWidth ? 4 : 8));
       const columnWidth = 100 / event.columns;
       const inset = event.columns > 1 ? 3 : 5;
       const visibleWidth = Math.max(58, columnWidth - inset * 2);

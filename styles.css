@@ -240,6 +240,39 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
   .class-room, .class-meta { font-size: 7.3px; }
 }
 
+/* Mobile overview: show the complete week at once. The phone layout becomes a
+   compact overview grid rather than a one-day carousel, avoiding horizontal or
+   day-by-day scrolling. */
+@media (max-width: 900px) {
+  .day-nav { display: none !important; }
+  .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)); }
+  .calendar .day-column { display: block !important; }
+  .day-header { justify-content: center; padding-left: 0; font-size: 9px; letter-spacing: .02em; }
+  .time-label { right: 3px; font-size: 7px; }
+  .class-card { border-radius: 5px; padding: 4px 4px 3px; border-left-width: 2px; }
+  .class-card.compact { padding: 3px 4px 2px; }
+  .class-code { font-size: 9px; letter-spacing: -.04em; }
+  .class-time { font-size: 7.5px; line-height: 1.05; margin-top: 3px; letter-spacing: -.03em; }
+  .class-details { left: 4px; right: 4px; bottom: 3px; gap: 2px; }
+  .class-room, .class-meta { font-size: 6.5px; letter-spacing: -.03em; }
+  .class-meta { text-align: right; }
+}
+
+@media (max-width: 600px) {
+  .app-shell { width: calc(100% - 8px); }
+  .timetable-head { padding: 10px; }
+  .student-name { font-size: 16px; }
+  .term-name { font-size: 9px; }
+  .calendar { grid-template-columns: 28px repeat(var(--day-count), minmax(0, 1fr)); }
+  .day-header { height: 28px; font-size: 8px; }
+  .time-label { font-size: 6.5px; }
+  .class-card { padding: 3px 3px 2px; }
+  .class-code { font-size: 7.8px; }
+  .class-time { font-size: 6.6px; margin-top: 2px; }
+  .class-details { left: 3px; right: 3px; bottom: 2px; }
+  .class-room, .class-meta { font-size: 5.7px; }
+}
+
 /* Export / print: preserve the desktop timetable geometry and content even when the
    user starts Export PDF from a phone-sized viewport. The browser handles final page scaling. */
 @page { size: A4 landscape; margin: 7mm; }
