@@ -210,6 +210,12 @@ function renderDayNav(activeDays) {
   }
 }
 
+function shortProfessor(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return parts.join(' ');
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
 function renderCalendar(records) {
   const allMeetings = records.flatMap((r, recordIndex) => r.days.map(day => ({ ...r, day, recordIndex })));
   if (!allMeetings.length) return;
@@ -296,7 +302,7 @@ function renderCalendar(records) {
       const family = courseFamilyKey(event.courseCode);
       const hue = colors.get(family) ?? 210;
       const shortCode = `${event.courseCode} · ${event.section}`;
-      const professor = event.instructor ? event.instructor : '';
+      const professor = (event.end - event.start) < 60 ? '' : shortProfessor(event.instructor);
       const professorTitle = professor ? `title="${escapeHtml(professor)}"` : '';
       const location = formatRoom(event);
 

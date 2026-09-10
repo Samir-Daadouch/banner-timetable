@@ -1,6 +1,6 @@
 # Banner Timetable
 
-A static, deterministic browser tool that converts a Banner schedule PDF into a polished weekly timetable.
+A static, deterministic browser tool developed by Samir Daadouch that converts a Banner schedule PDF into a polished weekly timetable.
 
 ## V1 scope
 
@@ -18,7 +18,6 @@ A static, deterministic browser tool that converts a Banner schedule PDF into a 
 - `app.js` — PDF.js loading, file handling, metrics, and calendar renderer
 - `banner-parser.js` — pure Banner parsing/normalization layer
 - `package.json` — optional local-server/test commands
-- `tests/banner-fixture.json` — exact PDF.js text-item fixture from the supplied AUS Banner PDF
 - `tests/parser-test.mjs` — deterministic parser regression tests
 
 ## Parser reliability
@@ -40,9 +39,7 @@ Another subtle failure mode was fixed in the parser: matching against whitespace
 
 ## Supplied PDF regression
 
-The supplied AUS Fall 2026 PDF is expected to produce:
 
-- Student: Samir Daadouch
 - Term: Fall 2026
 - Meetings: 8
 - Credits: 16
@@ -51,7 +48,6 @@ The supplied AUS Fall 2026 PDF is expected to produce:
 - Latest: 5:50 PM
 - Both 0-credit meetings retained
 
-The fixture was built from the PDF.js text-item structure of the supplied PDF. The source schedule itself shows the eight course rows, including the 0-credit NGN 211R and CMP 220L meetings. fileciteturn0file0L6-L46
 
 ## Local run on macOS
 
@@ -87,7 +83,6 @@ With the supplied PDF, verify:
 - Export PDF opens the browser print dialog with an A4 landscape timetable print layout; it forces the full weekly view even when the app is being viewed on a phone
 - No PDF data is uploaded by the application
 
-The supplied PDF's first page contains the authoritative course table; its second page is Banner's visual weekly overview. The parser deliberately uses the structured course table rather than trying to infer data from the graphical weekly page. fileciteturn0file0L6-L10 fileciteturn0file0L50-L84
 
 ## GitHub Pages
 

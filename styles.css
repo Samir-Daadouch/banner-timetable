@@ -137,7 +137,7 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 .class-code { font-size: 12px; line-height: 1.08; font-weight: 850; letter-spacing: -.01em; color: hsl(var(--course-hue) 72% 25%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .class-time { font-size: 10.5px; line-height: 1.12; font-weight: 800; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
 .class-details {
-  position: absolute; left: 9px; right: 8px; bottom: 6px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  position: absolute; left: 9px; right: 8px; bottom: 6px; display: grid; grid-template-columns: minmax(0, 1fr) auto;
   align-items: end; gap: 7px; min-width: 0; line-height: 1.05;
 }
 .class-room, .class-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -311,4 +311,11 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
   .class-room { font-size: 9px; }
   .class-meta { font-size: 8.6px; }
   * { overflow: visible; }
+}
+
+@media (max-width: 600px) {
+  .calendar-shell { margin-left: 6px; margin-right: 6px; }
+  .class-details { left: 7px; right: 7px; bottom: 5px; gap: 4px; }
+  .class-meta { max-width: 52%; }
+  .class-room { max-width: 48%; }
 }
