@@ -87,7 +87,7 @@ function formatDateRange(start, end) { return `${start} – ${end}`; }
 
 function courseFamilyKey(courseCode) {
   // Banner commonly uses trailing L/R codes for labs/recitations belonging to the
-  // same parent course (e.g. CMP 220L → CMP 220). Keep repeated days as one course.
+  // same parent course (e.g. trailing lab/recitation variants → parent course). Keep repeated days as one course.
   return String(courseCode || '').replace(/(\s\d{3,4})[LR]$/i, '$1').toUpperCase();
 }
 
@@ -423,3 +423,20 @@ els.print.addEventListener('click', () => {
   window.requestAnimationFrame(() => window.print());
 });
 window.addEventListener('afterprint', () => document.body.classList.remove('exporting'));
+
+// Small, non-disruptive help/legal panels.
+const tutorialButton = document.querySelector('#tutorialButton');
+const legalButton = document.querySelector('#legalButton');
+const tutorialPanel = document.querySelector('#tutorialPanel');
+const legalPanel = document.querySelector('#legalPanel');
+const closeTutorial = document.querySelector('#closeTutorial');
+const closeLegal = document.querySelector('#closeLegal');
+function toggleInfoPanel(panel, other) {
+  other.classList.add('hidden');
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+tutorialButton.addEventListener('click', () => toggleInfoPanel(tutorialPanel, legalPanel));
+legalButton.addEventListener('click', () => toggleInfoPanel(legalPanel, tutorialPanel));
+closeTutorial.addEventListener('click', () => tutorialPanel.classList.add('hidden'));
+closeLegal.addEventListener('click', () => legalPanel.classList.add('hidden'));
