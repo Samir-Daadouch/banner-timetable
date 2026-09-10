@@ -333,3 +333,41 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 .tutorial-image { display:block; width:100%; max-width:none; height:auto; margin:10px 0 18px; border:1px solid #e1e6ef; border-radius:10px; }
 @media (max-width:600px) { .site-nav { padding-top:12px; } .brand-link { font-size:13px; } .text-button { font-size:11px; padding:7px 5px; } .info-panel { padding:14px; } }
 @media print { .site-nav, .info-panel { display:none !important; } }
+
+
+/* Final mobile card fix: keep course, room, and professor in separate rows.
+   This prevents narrow weekly-overview cards from colliding or overlapping. */
+@media (max-width: 900px) {
+  .class-details {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 1px;
+    line-height: 1.05;
+  }
+  .class-room, .class-meta {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 600px) {
+  .class-details {
+    left: 3px;
+    right: 3px;
+    bottom: 2px;
+    gap: 1px;
+  }
+  .class-room, .class-meta {
+    font-size: 5.5px;
+    line-height: 1.05;
+    letter-spacing: -.025em;
+  }
+}

@@ -46,7 +46,7 @@ const DAY_SHORT = { Sunday: 'Sun', Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'We
 const PALETTES = {
   blue:   { label: 'Blue', hues: [198, 226, 254, 282, 310, 178, 238, 270] },
   pink:   { label: 'Pink', hues: [306, 334, 358, 20, 342, 318, 10, 286] },
-  yellow: { label: 'Yellow', hues: [24, 48, 72, 96, 34, 60, 86, 112] },
+  yellow: { label: 'Yellow', hues: [24, 34, 44, 54, 64, 29, 39, 49] },
   green:  { label: 'Green', hues: [104, 132, 160, 188, 116, 146, 174, 202] },
   rainbow:{ label: 'Rainbow', hues: [198, 248, 294, 338, 24, 72, 126, 174] }
 };
