@@ -1,0 +1,12 @@
+{
+  "name": "banner-timetable",
+  "version": "1.7.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic client-side Banner PDF timetable generator",
+  "scripts": {
+    "test": "node tests/parser-test.mjs",
+    "start": "python3 -m http.server 4173",
+    "serve": "python3 -m http.server 4173"
+  }
+}

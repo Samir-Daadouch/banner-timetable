@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111827">
+  <title>Banner Timetable</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="upload-hero no-print" aria-label="Banner schedule upload">
+      <div class="hero-copy">
+        <div class="eyebrow">BANNER TIMETABLE</div>
+        <h1>Turn your Banner schedule into a clean weekly view.</h1>
+        <p class="subhead">Everything is processed in your browser. No account, no backend, no AI parsing.</p>
+        <div class="hero-points" aria-label="Privacy and compatibility notes">
+          <span>Private in-browser parsing</span>
+          <span>Works on phone & desktop</span>
+          <span>Print / save as PDF</span>
+        </div>
+      </div>
+      <div class="upload-card">
+        <div class="upload-card-top">
+          <div class="drop-icon" aria-hidden="true">PDF</div>
+          <div>
+            <strong>Upload your Banner schedule</strong>
+            <span>Use the official Banner schedule PDF export.</span>
+          </div>
+        </div>
+        <div id="dropZone" class="drop-zone" aria-label="Upload Banner schedule PDF">
+          <span class="drop-zone-title">Drop PDF here</span>
+          <span class="drop-zone-subtitle">or tap to choose a file</span>
+        </div>
+        <label class="upload-button upload-button-wide">
+          <input id="pdfInput" type="file" accept="application/pdf,.pdf">
+          <span>Choose Banner PDF</span>
+        </label>
+        <div class="upload-hint">PDF only · your file is never uploaded to the timetable app</div>
+      </div>
+    </section>
+
+    <section id="status" class="status no-print" aria-live="polite"></section>
+
+    <section id="output" class="output hidden">
+      <div class="toolbar no-print">
+        <div class="output-context">
+          <div id="sourceLabel" class="source-label"></div>
+          <div id="parseMessage" class="parse-message"></div>
+        </div>
+        <div class="toolbar-actions">
+          <div class="palette-wrap">
+            <span class="palette-label">Colors</span>
+            <div id="palette" class="palette" aria-label="Calendar color palette"></div>
+          </div>
+          <button id="printButton" class="print-button" type="button">Export PDF</button>
+        </div>
+      </div>
+
+      <article id="timetable" class="timetable" aria-label="Weekly class timetable">
+        <div class="timetable-head">
+          <div>
+            <div id="studentName" class="student-name"></div>
+            <div id="termName" class="term-name"></div>
+          </div>
+          <div class="metrics" id="metrics"></div>
+        </div>
+        <div id="dayNav" class="day-nav no-print" aria-label="Choose day on mobile"></div>
+        <div id="calendar" class="calendar"></div>
+      </article>
+    </section>
+
+    <section id="errorPanel" class="error-panel no-print hidden">
+      <strong>We couldn't read this Banner PDF.</strong>
+      <p id="errorText"></p>
+      <details>
+        <summary>Parser diagnostics</summary>
+        <pre id="diagnostics"></pre>
+      </details>
+    </section>
+  </main>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
