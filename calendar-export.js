@@ -33,6 +33,15 @@ function formatDateTime(date, minutes) {
   return `${formatDate(date)}T${pad2(hour)}${pad2(minute)}00`;
 }
 
+// Banner schedules are published in UAE local time. Keep DTSTART/DTEND tied to
+// Asia/Dubai so calendar applications such as Google Calendar do not reinterpret
+// the timetable using the device's current timezone.
+function formatUtcDateTime(date, minutes) {
+  const value = new Date(Date.UTC(date.year, date.month - 1, date.day, Math.floor(minutes / 60), minutes % 60));
+  value.setUTCMinutes(value.getUTCMinutes() - 240); // UAE is UTC+04:00 year-round.
+  return `${value.getUTCFullYear()}${pad2(value.getUTCMonth() + 1)}${pad2(value.getUTCDate())}T${pad2(value.getUTCHours())}${pad2(value.getUTCMinutes())}00Z`;
+}
+
 function parseTimeMinutes(value) {
   const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})\s*([AP])\.?M\.?$/i);
   if (match) {
@@ -113,9 +122,9 @@ export function generateIcs(parsed) {
         'BEGIN:VEVENT',
         `UID:${makeUid(record, day, index)}`,
         `DTSTAMP:${dtstamp}`,
-        `DTSTART:${formatDateTime(firstDate, start)}`,
-        `DTEND:${formatDateTime(firstDate, end)}`,
-        `RRULE:FREQ=WEEKLY;UNTIL=${formatDateTime(parsedEnd, end)}`,
+        `DTSTART;TZID=Asia/Dubai:${formatDateTime(firstDate, start)}`,
+        `DTEND;TZID=Asia/Dubai:${formatDateTime(firstDate, end)}`,
+        `RRULE:FREQ=WEEKLY;UNTIL=${formatUtcDateTime(parsedEnd, end)}`,
         `SUMMARY:${escapeIcsText(record.courseCode)}`,
         `DESCRIPTION:${escapeIcsText(description)}`,
         'END:VEVENT'
@@ -131,6 +140,16 @@ export function generateIcs(parsed) {
     'PRODID:-//Banner Timetable//Calendar Export//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE',
+    'TZID:Asia/Dubai',
+    'X-LIC-LOCATION:Asia/Dubai',
+    'BEGIN:STANDARD',
+    'DTSTART:19700101T000000',
+    'TZOFFSETFROM:+0400',
+    'TZOFFSETTO:+0400',
+    'TZNAME:GST',
+    'END:STANDARD',
+    'END:VTIMEZONE',
     ...events,
     'END:VCALENDAR',
     ''

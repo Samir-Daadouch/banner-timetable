@@ -825,7 +825,7 @@ html.site-dark ::-webkit-scrollbar-thumb:hover { background: #485570; }
   .timetable.compressed .class-details { gap: 1px; bottom: 2px; }
 }
 
-.tutorial-video { width: min(100%, 820px); margin-inline: auto; }
+.tutorial-video { width: min(100%, 760px); margin-inline: auto; }
 
 html, body { overflow-x: hidden; }
 .site-nav, .site-nav-links { min-width: 0; }
@@ -837,4 +837,39 @@ html, body { overflow-x: hidden; }
   .site-nav-links { flex: 1 1 auto; width: 100%; justify-content: flex-end; }
   .site-theme-toggle { flex: 0 0 auto; }
   .tutorial-video { width: 100%; }
+}
+
+
+/* Final micro-adjustments: tablet card inset, mobile detail alignment, export feedback, and dark-nav containment. */
+.export-confetti {
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
+}
+.confetti-piece {
+  position: absolute; font-size: 11px; line-height: 1; font-weight: 900;
+  color: hsl(calc(200 + var(--n, 0) * 37) 80% 55%);
+  animation: export-confetti-fall 850ms cubic-bezier(.2,.75,.25,1) forwards;
+}
+.confetti-piece:nth-child(3n) { color: #f59e0b; }
+.confetti-piece:nth-child(3n + 1) { color: #4f7cff; }
+.confetti-piece:nth-child(3n + 2) { color: #16a394; }
+@keyframes export-confetti-fall {
+  from { opacity: 0; transform: translate3d(0, 0, 0) rotate(0deg) scale(.85); }
+  12% { opacity: 1; }
+  to { opacity: 0; transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot)) scale(1); }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .timetable.compressed .class-card { padding-left: 15px; }
+  .timetable.compressed .class-details { left: 15px; }
+}
+
+@media (max-width: 600px) {
+  .class-details { left: 8px !important; right: 4px; }
+  .site-nav { overflow: visible; }
+  .site-nav-links { max-width: 100%; overflow: visible; }
+  .site-theme-toggle { margin-right: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece { animation-duration: 1ms !important; }
 }
