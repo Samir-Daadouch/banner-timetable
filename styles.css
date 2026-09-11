@@ -333,7 +333,7 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 .info-panel p { max-width:760px; color:#526071; line-height:1.65; }
 .close-button { border:0; background:#eef2f8; color:#344054; width:32px; height:32px; border-radius:50%; font-size:24px; cursor:pointer; }
 .tutorial-image { display:block; width:100%; max-width:none; height:auto; margin:10px 0 18px; border:1px solid #e1e6ef; border-radius:10px; }
-@media (max-width:600px) { .site-nav { padding-top:12px; } .brand-link { font-size:13px; } .text-button { font-size:11px; padding:7px 5px; } .info-panel { padding:14px; } }
+@media (max-width:600px) { .site-nav { padding-top:12px; } .brand-link { font-size:13px; } .creator-credit { display:none; } .text-button { font-size:11px; padding:7px 5px; } .info-panel { padding:14px; } }
 @media print { .site-nav, .info-panel { display:none !important; } }
 
 
@@ -555,3 +555,5 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
   .timetable.compressed { width: min(52vw, 620px) !important; margin-inline: auto !important; }
   .timetable.compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)) !important; }
 }
+
+.creator-credit { color:#7a8797; font-size:11px; white-space:nowrap; margin-right:4px; }
