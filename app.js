@@ -427,19 +427,15 @@ els.dropZone.addEventListener('drop', e => {
   els.dropZone.classList.remove('dragging');
   handleFile(e.dataTransfer.files[0]);
 });
-let html2canvasLib;
-let jsPdfLib;
-async function loadHtml2Canvas() {
-  if (html2canvasLib) return html2canvasLib;
-  html2canvasLib = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
-  return html2canvasLib.default || html2canvasLib;
+function getHtml2Canvas() {
+  if (typeof window.html2canvas === 'function') return window.html2canvas;
+  throw new Error('Image export library could not be loaded. Please check your internet connection and reload the page.');
 }
 
-async function loadJsPdf() {
-  if (jsPdfLib) return jsPdfLib;
-  const mod = await import('https://cdn.jsdelivr.net/npm/jspdf@3.0.1/+esm');
-  jsPdfLib = mod.jsPDF || mod.default?.jsPDF || mod.default;
-  return jsPdfLib;
+function getJsPdf() {
+  const jsPDF = window.jspdf?.jsPDF;
+  if (typeof jsPDF === 'function') return jsPDF;
+  throw new Error('PDF export library could not be loaded. Please check your internet connection and reload the page.');
 }
 
 function downloadBlob(blob, filename) {
@@ -454,13 +450,17 @@ function downloadBlob(blob, filename) {
 }
 
 async function captureTimetable() {
-  const html2canvas = await loadHtml2Canvas();
+  const html2canvas = getHtml2Canvas();
+  // Let the browser finish layout after palette/theme/compression changes.
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   return html2canvas(els.timetable, {
-    scale: Math.min(3, Math.max(2, window.devicePixelRatio || 1)),
+    scale: Math.min(2.5, Math.max(1.5, window.devicePixelRatio || 1)),
     backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
     useCORS: true,
+    allowTaint: false,
     logging: false,
-    imageTimeout: 10000
+    imageTimeout: 10000,
+    removeContainer: true
   });
 }
 
@@ -476,6 +476,7 @@ els.image.addEventListener('click', async () => {
     const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
     downloadBlob(blob, `banner-timetable-${term}.png`);
   } catch (error) {
+    console.error('Image export failed', error);
     els.status.textContent = `Image export failed: ${error?.message || 'unknown error'}`;
   } finally {
     els.image.disabled = false;
@@ -505,7 +506,7 @@ els.print.addEventListener('click', async () => {
   els.print.disabled = true;
   els.print.textContent = 'Preparing PDF…';
   try {
-    const [html2canvas, jsPDF] = await Promise.all([loadHtml2Canvas(), loadJsPdf()]);
+    const jsPDF = getJsPdf();
     const canvas = await captureTimetable();
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
     const pageWidth = 297;
@@ -522,6 +523,7 @@ els.print.addEventListener('click', async () => {
     const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
     pdf.save(`banner-timetable-${term}.pdf`);
   } catch (error) {
+    console.error('PDF export failed', error);
     els.status.textContent = `PDF export failed: ${error?.message || 'unknown error'}`;
   } finally {
     els.print.disabled = false;
