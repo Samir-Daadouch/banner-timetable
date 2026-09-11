@@ -468,10 +468,10 @@ async function captureTimetable() {
   const html2canvas = getHtml2Canvas();
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   const bounds = els.timetable.getBoundingClientRect();
-  const maxDimension = 16000;
+  const maxDimension = 22000;
   const maxSourceDimension = Math.max(1, bounds.width, bounds.height);
   const deviceScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
-  const scale = Math.min(7, maxDimension / maxSourceDimension, deviceScale * 4);
+  const scale = Math.min(10, maxDimension / maxSourceDimension, deviceScale * 5);
   return html2canvas(els.timetable, {
     scale: Math.max(3.5, scale),
     backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
@@ -500,7 +500,7 @@ function showExportConfetti() {
     layer.appendChild(piece);
   }
   document.body.appendChild(layer);
-  window.setTimeout(() => layer.remove(), 1100);
+  window.setTimeout(() => layer.remove(), 3450);
 }
 
 els.calendarExport.addEventListener('click', () => {

@@ -824,8 +824,8 @@ html.site-dark ::-webkit-scrollbar-thumb:hover { background: #485570; }
   .timetable.compressed .class-meta { font-size: 5.7px; line-height: 1.05; }
   .timetable.compressed .class-details { gap: 1px; bottom: 2px; }
   .timetable.compressed .class-code,
-  .timetable.compressed .class-time { margin-left: 3px; }
-  .timetable.compressed .class-room { position: relative; left: 3px; }
+  .timetable.compressed .class-time { margin-left: 6px; }
+  .timetable.compressed .class-room { position: relative; left: 6px; }
 }
 
 .tutorial-video { width: min(100%, 760px); margin-inline: auto; }
@@ -850,7 +850,7 @@ html, body { overflow-x: hidden; }
 .confetti-piece {
   position: absolute; font-size: 11px; line-height: 1; font-weight: 900;
   color: hsl(calc(200 + var(--n, 0) * 37) 80% 55%);
-  animation: export-confetti-fall 1700ms cubic-bezier(.2,.75,.25,1) forwards;
+  animation: export-confetti-fall 3400ms cubic-bezier(.2,.75,.25,1) forwards;
 }
 .confetti-piece:nth-child(3n) { color: #f59e0b; }
 .confetti-piece:nth-child(3n + 1) { color: #4f7cff; }
@@ -868,6 +868,8 @@ html, body { overflow-x: hidden; }
 
 @media (max-width: 600px) {
   .class-details { left: 9px !important; right: 4px; bottom: 5px; }
+  .class-details .class-room,
+  .class-details .class-meta { position: relative; transform: translateY(-3px); }
   .class-card { padding-left: 9px; }
   .site-nav { overflow: visible; }
   .site-nav-links { max-width: 100%; overflow: visible; }
