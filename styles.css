@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --ink: #111827;
   --muted: #667085;
   --line: #e1e5ea;
@@ -477,4 +478,80 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
 @media print {
   .secondary-export-button, .compress-button { display: none !important; }
   .timetable.compressed { width: 100%; margin-inline: 0; }
+}
+
+/* Calendar dark-mode toggle. The surrounding website stays permanently light. */
+.theme-button { background: #344054; }
+.theme-button.active { background: #111827; }
+.timetable.calendar-dark,
+.timetable.calendar-dark .timetable-head,
+.timetable.calendar-dark .calendar,
+.timetable.calendar-dark .day-grid,
+.timetable.calendar-dark .day-column,
+.timetable.calendar-dark .time-column {
+  background: #111827;
+  color: #eef2f7;
+}
+.timetable.calendar-dark { border-color: #374151; box-shadow: none; }
+.timetable.calendar-dark .timetable-head { border-bottom-color: #374151; }
+.timetable.calendar-dark .student-name,
+.timetable.calendar-dark .term-name,
+.timetable.calendar-dark .metric-value,
+.timetable.calendar-dark .metric-label,
+.timetable.calendar-dark .day-header,
+.timetable.calendar-dark .time-label { color: #eef2f7; }
+.timetable.calendar-dark .day-header,
+.timetable.calendar-dark .time-header { background: #1f2937; border-color: #374151; }
+.timetable.calendar-dark .time-grid { background: #111827; border-right-color: #374151; }
+.timetable.calendar-dark .hour-line { border-top-color: #2b3545; }
+.timetable.calendar-dark .class-card { box-shadow: none; }
+
+/* Old Banner refinements: all timetable text uses the same Banner blue and is
+   slightly heavier, while cards touch the grid edges like the original table. */
+.timetable.old-banner,
+.timetable.old-banner .timetable-head,
+.timetable.old-banner .metric,
+.timetable.old-banner .metric-value,
+.timetable.old-banner .metric-label,
+.timetable.old-banner .student-name,
+.timetable.old-banner .term-name,
+.timetable.old-banner .day-header,
+.timetable.old-banner .time-label,
+.timetable.old-banner .class-code,
+.timetable.old-banner .class-time,
+.timetable.old-banner .class-room,
+.timetable.old-banner .class-meta { color: #003399; font-weight: 600; }
+.timetable.old-banner .student-name { font-weight: 700; }
+.timetable.old-banner .day-header { font-weight: 700; }
+.timetable.old-banner .class-code { font-weight: 700; }
+.timetable.old-banner .class-card { margin: 0 !important; }
+
+@media (min-width: 901px) {
+  .timetable.old-banner.compressed { width: min(52vw, 620px); margin-inline: auto; }
+  .timetable.old-banner.compressed .timetable-head { min-height: 66px; padding: 12px 14px; }
+  .timetable.old-banner.compressed .student-name { font-size: 18px; }
+  .timetable.old-banner.compressed .term-name { font-size: 10px; }
+  .timetable.old-banner.compressed .metric-value { font-size: 14px; }
+  .timetable.old-banner.compressed .metric-label { font-size: 7px; }
+  .timetable.old-banner.compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)); }
+  .timetable.old-banner.compressed .day-header,
+  .timetable.old-banner.compressed .time-header { height: 32px; }
+  .timetable.old-banner.compressed .day-header { font-size: 8px; }
+  .timetable.old-banner.compressed .time-label { font-size: 7px; right: 4px; }
+  .timetable.old-banner.compressed .class-card { padding: 4px 4px 3px; }
+  .timetable.old-banner.compressed .class-code { font-size: 8.5px; }
+  .timetable.old-banner.compressed .class-time { font-size: 7px; margin-top: 3px; }
+  .timetable.old-banner.compressed .class-room,
+  .timetable.old-banner.compressed .class-meta { font-size: 6.2px; }
+}
+
+/* Native print styles are retained as a fallback; the Export PDF button now
+   generates a guaranteed single-page A4 PDF from the exact current timetable. */
+@media print {
+  @page { size: A4 landscape; margin: 7mm; }
+  html, body { min-height: 0 !important; height: auto !important; }
+  .app-shell { padding-bottom: 0 !important; }
+  .output, .timetable { break-after: avoid !important; page-break-after: avoid !important; }
+  .timetable.compressed { width: min(52vw, 620px) !important; margin-inline: auto !important; }
+  .timetable.compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)) !important; }
 }

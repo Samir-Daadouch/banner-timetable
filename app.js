@@ -37,6 +37,7 @@ const els = {
   print: document.querySelector('#printButton'),
   image: document.querySelector('#imageButton'),
   compress: document.querySelector('#compressButton'),
+  theme: document.querySelector('#themeButton'),
   errorPanel: document.querySelector('#errorPanel'),
   errorText: document.querySelector('#errorText'),
   diagnostics: document.querySelector('#diagnostics')
@@ -55,6 +56,7 @@ const PALETTES = {
 };
 let activePalette = 'blue';
 let activeMobileDay = null;
+let darkMode = false;
 
 async function extractPdf(file) {
   const pdfjs = await loadPdfJs();
@@ -317,8 +319,9 @@ function renderCalendar(records) {
       const minimumCardHeight = compressed || mobileWidth ? 34 : tabletWidth ? 46 : 62;
       const height = Math.max(minimumCardHeight, (duration / 60) * hourHeight - (compressed || mobileWidth ? 4 : 8));
       const columnWidth = 100 / event.columns;
-      const inset = event.columns > 1 ? 3 : 5;
-      const visibleWidth = Math.max(58, columnWidth - inset * 2);
+      const edgeToEdgeOldBanner = activePalette === 'oldBanner';
+      const inset = edgeToEdgeOldBanner ? 0 : (event.columns > 1 ? 3 : 5);
+      const visibleWidth = edgeToEdgeOldBanner ? columnWidth : Math.max(58, columnWidth - inset * 2);
       card.style.top = `${top}px`;
       card.style.height = `${height}px`;
       card.style.left = `calc(${event.column * columnWidth}% + ${inset}px)`;
@@ -425,10 +428,18 @@ els.dropZone.addEventListener('drop', e => {
   handleFile(e.dataTransfer.files[0]);
 });
 let html2canvasLib;
+let jsPdfLib;
 async function loadHtml2Canvas() {
   if (html2canvasLib) return html2canvasLib;
   html2canvasLib = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
   return html2canvasLib.default || html2canvasLib;
+}
+
+async function loadJsPdf() {
+  if (jsPdfLib) return jsPdfLib;
+  const mod = await import('https://cdn.jsdelivr.net/npm/jspdf@3.0.1/+esm');
+  jsPdfLib = mod.jsPDF || mod.default?.jsPDF || mod.default;
+  return jsPdfLib;
 }
 
 function downloadBlob(blob, filename) {
@@ -442,20 +453,24 @@ function downloadBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+async function captureTimetable() {
+  const html2canvas = await loadHtml2Canvas();
+  return html2canvas(els.timetable, {
+    scale: Math.min(3, Math.max(2, window.devicePixelRatio || 1)),
+    backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
+    useCORS: true,
+    logging: false,
+    imageTimeout: 10000
+  });
+}
+
 els.image.addEventListener('click', async () => {
   if (!window.__lastParsed) return;
   const originalText = els.image.textContent;
   els.image.disabled = true;
   els.image.textContent = 'Preparing image…';
   try {
-    const html2canvas = await loadHtml2Canvas();
-    const canvas = await html2canvas(els.timetable, {
-      scale: Math.min(3, Math.max(2, window.devicePixelRatio || 1)),
-      backgroundColor: '#ffffff',
-      useCORS: true,
-      logging: false,
-      imageTimeout: 10000
-    });
+    const canvas = await captureTimetable();
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('Could not create the PNG image.');
     const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
@@ -476,11 +491,43 @@ els.compress.addEventListener('click', () => {
   if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
 });
 
-els.print.addEventListener('click', () => {
-  document.body.classList.add('exporting');
-  window.requestAnimationFrame(() => window.print());
+els.theme.addEventListener('click', () => {
+  darkMode = !darkMode;
+  els.timetable.classList.toggle('calendar-dark', darkMode);
+  els.theme.classList.toggle('active', darkMode);
+  els.theme.setAttribute('aria-pressed', String(darkMode));
+  els.theme.textContent = darkMode ? 'Light' : 'Dark';
 });
-window.addEventListener('afterprint', () => document.body.classList.remove('exporting'));
+
+els.print.addEventListener('click', async () => {
+  if (!window.__lastParsed) return;
+  const originalText = els.print.textContent;
+  els.print.disabled = true;
+  els.print.textContent = 'Preparing PDF…';
+  try {
+    const [html2canvas, jsPDF] = await Promise.all([loadHtml2Canvas(), loadJsPdf()]);
+    const canvas = await captureTimetable();
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+    const pageWidth = 297;
+    const pageHeight = 210;
+    const margin = 7;
+    const maxWidth = pageWidth - margin * 2;
+    const maxHeight = pageHeight - margin * 2;
+    const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+    const width = canvas.width * ratio;
+    const height = canvas.height * ratio;
+    const x = (pageWidth - width) / 2;
+    const y = (pageHeight - height) / 2;
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, width, height, undefined, 'FAST');
+    const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
+    pdf.save(`banner-timetable-${term}.pdf`);
+  } catch (error) {
+    els.status.textContent = `PDF export failed: ${error?.message || 'unknown error'}`;
+  } finally {
+    els.print.disabled = false;
+    els.print.textContent = originalText;
+  }
+});
 
 // Small, non-disruptive help/legal panels.
 const tutorialButton = document.querySelector('#tutorialButton');
