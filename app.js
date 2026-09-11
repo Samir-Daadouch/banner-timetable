@@ -557,10 +557,98 @@ els.superCompress.addEventListener('click', () => {
 }
 
 
+function base64ToUint8Array(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function concatUint8Arrays(parts) {
+  const total = parts.reduce((sum, part) => sum + part.length, 0);
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const part of parts) {
+    result.set(part, offset);
+    offset += part.length;
+  }
+  return result;
+}
+
+function asciiBytes(text) {
+  return new TextEncoder().encode(text);
+}
+
+function buildImagePdf(canvas) {
+  // Self-contained one-page A4 landscape PDF fallback. This keeps PDF export
+  // working even when the optional jsPDF CDN script is unavailable.
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  const comma = dataUrl.indexOf(',');
+  if (comma < 0) throw new Error('Could not encode the timetable image for PDF export.');
+  const jpegBytes = base64ToUint8Array(dataUrl.slice(comma + 1));
+
+  const pageWidth = 841.8897638;
+  const pageHeight = 595.2755906;
+  const margin = 14.17322835; // 5 mm
+  const maxWidth = pageWidth - margin * 2;
+  const maxHeight = pageHeight - margin * 2;
+  const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+  const width = canvas.width * ratio;
+  const height = canvas.height * ratio;
+  const x = (pageWidth - width) / 2;
+  const y = (pageHeight - height) / 2;
+
+  const objects = [];
+  objects[1] = asciiBytes('<< /Type /Catalog /Pages 2 0 R >>');
+  objects[2] = asciiBytes('<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+  objects[3] = asciiBytes('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 841.8897638 595.2755906] /Resources << /XObject << /Im1 5 0 R >> >> /Contents 4 0 R >>');
+
+  const content = [
+    'q',
+    `${width.toFixed(4)} 0 0 ${height.toFixed(4)} ${x.toFixed(4)} ${y.toFixed(4)} cm`,
+    '/Im1 Do',
+    'Q',
+    ''
+  ].join('\n');
+  const contentBytes = asciiBytes(content);
+  objects[4] = concatUint8Arrays([
+    asciiBytes(`<< /Length ${contentBytes.length} >>\nstream\n`),
+    contentBytes,
+    asciiBytes('endstream')
+  ]);
+
+  objects[5] = concatUint8Arrays([
+    asciiBytes(`<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`),
+    jpegBytes,
+    asciiBytes('\nendstream')
+  ]);
+
+  const header = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a, 0x25, 0xff, 0xff, 0xff, 0xff, 0x0a]);
+  const chunks = [header];
+  const offsets = new Array(objects.length).fill(0);
+  let position = header.length;
+
+  for (let i = 1; i < objects.length; i++) {
+    const prefix = asciiBytes(`${i} 0 obj\n`);
+    const suffix = asciiBytes('\nendobj\n');
+    offsets[i] = position;
+    chunks.push(prefix, objects[i], suffix);
+    position += prefix.length + objects[i].length + suffix.length;
+  }
+
+  const xrefOffset = position;
+  let xref = `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+  for (let i = 1; i < objects.length; i++) {
+    xref += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  }
+  xref += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  chunks.push(asciiBytes(xref));
+
+  return new Blob([concatUint8Arrays(chunks)], { type: 'application/pdf' });
+}
+
 async function exportPdfOnePage() {
   const html2canvas = getHtml2Canvas();
-  const jsPDF = window.jspdf?.jsPDF;
-  if (!jsPDF) throw new Error('PDF export library could not be loaded. Please reload the page and try again.');
 
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   const bounds = els.timetable.getBoundingClientRect();
@@ -577,20 +665,25 @@ async function exportPdfOnePage() {
     removeContainer: true
   });
 
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const margin = 5;
-  const maxWidth = pageWidth - margin * 2;
-  const maxHeight = pageHeight - margin * 2;
-  const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
-  const width = canvas.width * ratio;
-  const height = canvas.height * ratio;
-  const x = (pageWidth - width) / 2;
-  const y = (pageHeight - height) / 2;
-  const dataUrl = canvas.toDataURL('image/png');
-  pdf.addImage(dataUrl, 'PNG', x, y, width, height, undefined, 'FAST');
-  return pdf;
+  const jsPDF = window.jspdf?.jsPDF;
+  if (jsPDF) {
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 5;
+    const maxWidth = pageWidth - margin * 2;
+    const maxHeight = pageHeight - margin * 2;
+    const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+    const width = canvas.width * ratio;
+    const height = canvas.height * ratio;
+    const x = (pageWidth - width) / 2;
+    const y = (pageHeight - height) / 2;
+    const dataUrl = canvas.toDataURL('image/png');
+    pdf.addImage(dataUrl, 'PNG', x, y, width, height, undefined, 'FAST');
+    return { kind: 'jsPDF', value: pdf };
+  }
+
+  return { kind: 'blob', value: buildImagePdf(canvas) };
 }
 
 els.print.addEventListener('click', async () => {
@@ -599,9 +692,13 @@ els.print.addEventListener('click', async () => {
   els.print.disabled = true;
   els.print.textContent = 'Preparing PDF…';
   try {
-    const pdf = await exportPdfOnePage();
+    const exported = await exportPdfOnePage();
     const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
-    pdf.save(`banner-timetable-${term}.pdf`);
+    if (exported.kind === 'jsPDF') {
+      exported.value.save(`banner-timetable-${term}.pdf`);
+    } else {
+      downloadBlob(exported.value, `banner-timetable-${term}.pdf`);
+    }
   } catch (error) {
     console.error('PDF export failed', error);
     els.status.textContent = `PDF export failed: ${error?.message || 'unknown error'}`;
