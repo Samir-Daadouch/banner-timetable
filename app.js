@@ -527,7 +527,7 @@ els.image.addEventListener('click', async () => {
 });
 
 els.compress.addEventListener('click', () => {
-  if (els.timetable.classList.contains('super-compressed')) {
+  if (els.superCompress && els.timetable.classList.contains('super-compressed')) {
     els.timetable.classList.remove('super-compressed');
     els.superCompress.classList.remove('active');
     els.superCompress.setAttribute('aria-pressed', 'false');
@@ -540,6 +540,7 @@ els.compress.addEventListener('click', () => {
   if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
 });
 
+if (els.superCompress) {
 els.superCompress.addEventListener('click', () => {
   if (els.timetable.classList.contains('compressed')) {
     els.timetable.classList.remove('compressed');
@@ -553,17 +554,61 @@ els.superCompress.addEventListener('click', () => {
   els.superCompress.textContent = active ? 'Expand' : 'Super compress';
   if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
 });
+}
 
-// Restore the older, browser-native PDF export path. It is more reliable than
-// rasterizing the calendar into a client-generated PDF and automatically respects
-// the active print CSS, including Compress and calendar dark mode.
-els.print.addEventListener('click', () => {
+
+async function exportPdfOnePage() {
+  const html2canvas = getHtml2Canvas();
+  const jsPDF = window.jspdf?.jsPDF;
+  if (!jsPDF) throw new Error('PDF export library could not be loaded. Please reload the page and try again.');
+
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  const bounds = els.timetable.getBoundingClientRect();
+  const maxDimension = 24000;
+  const maxSourceDimension = Math.max(1, bounds.width, bounds.height);
+  const deviceScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  const scale = Math.min(10, maxDimension / maxSourceDimension, deviceScale * 5);
+  const canvas = await html2canvas(els.timetable, {
+    scale: Math.max(4, scale),
+    backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
+    useCORS: true,
+    logging: false,
+    imageTimeout: 10000,
+    removeContainer: true
+  });
+
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 5;
+  const maxWidth = pageWidth - margin * 2;
+  const maxHeight = pageHeight - margin * 2;
+  const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+  const width = canvas.width * ratio;
+  const height = canvas.height * ratio;
+  const x = (pageWidth - width) / 2;
+  const y = (pageHeight - height) / 2;
+  const dataUrl = canvas.toDataURL('image/png');
+  pdf.addImage(dataUrl, 'PNG', x, y, width, height, undefined, 'FAST');
+  return pdf;
+}
+
+els.print.addEventListener('click', async () => {
   if (!window.__lastParsed) return;
-  document.body.classList.add('exporting');
-  window.requestAnimationFrame(() => window.print());
-});
-window.addEventListener('afterprint', () => {
-  document.body.classList.remove('exporting');
+  const originalText = els.print.textContent;
+  els.print.disabled = true;
+  els.print.textContent = 'Preparing PDF…';
+  try {
+    const pdf = await exportPdfOnePage();
+    const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
+    pdf.save(`banner-timetable-${term}.pdf`);
+  } catch (error) {
+    console.error('PDF export failed', error);
+    els.status.textContent = `PDF export failed: ${error?.message || 'unknown error'}`;
+  } finally {
+    els.print.disabled = false;
+    els.print.textContent = originalText;
+  }
 });
 
 // Small, non-disruptive help/legal panels.
