@@ -545,8 +545,8 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
   .timetable.old-banner.compressed .class-meta { font-size: 6.2px; }
 }
 
-/* Native print styles are retained as a fallback; the Export PDF button now
-   generates a guaranteed single-page A4 PDF from the exact current timetable. */
+/* Native print styles used by Export PDF; the browser print engine
+   generates the final A4 landscape PDF from the exact current timetable. */
 @media print {
   @page { size: A4 landscape; margin: 7mm; }
   html, body { min-height: 0 !important; height: auto !important; }
