@@ -35,6 +35,8 @@ const els = {
   dayNav: document.querySelector('#dayNav'),
   palette: document.querySelector('#palette'),
   print: document.querySelector('#printButton'),
+  image: document.querySelector('#imageButton'),
+  compress: document.querySelector('#compressButton'),
   errorPanel: document.querySelector('#errorPanel'),
   errorText: document.querySelector('#errorText'),
   diagnostics: document.querySelector('#diagnostics')
@@ -44,11 +46,12 @@ const DAY_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 const DAY_SHORT = { Sunday: 'Sun', Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat' };
 
 const PALETTES = {
-  blue:   { label: 'Blue', hues: [198, 226, 254, 282, 310, 178, 238, 270] },
-  pink:   { label: 'Pink', hues: [306, 334, 358, 20, 342, 318, 10, 286] },
-  yellow: { label: 'Yellow', hues: [24, 34, 44, 54, 64, 29, 39, 49] },
-  green:  { label: 'Green', hues: [104, 132, 160, 188, 116, 146, 174, 202] },
-  rainbow:{ label: 'Rainbow', hues: [198, 248, 294, 338, 24, 72, 126, 174] }
+  blue:   { label: 'Blue', hues: [202, 218, 234, 250, 266, 194, 226, 242] },
+  pink:   { label: 'Pink', hues: [318, 338, 356, 8, 326, 346, 16, 302] },
+  yellow: { label: 'Yellow', hues: [25, 38, 50, 62, 72, 30, 45, 57] },
+  green:  { label: 'Green', hues: [98, 112, 126, 140, 150, 104, 120, 132] },
+  rainbow:{ label: 'Rainbow', hues: [198, 248, 294, 338, 24, 72, 126, 174] },
+  oldBanner: { label: 'Old Banner', oldBanner: true, hues: [] }
 };
 let activePalette = 'blue';
 let activeMobileDay = null;
@@ -235,7 +238,8 @@ function renderCalendar(records) {
   const hourCount = Math.max(1, (gridEnd - gridStart) / 60);
   const mobileWidth = window.matchMedia('(max-width: 600px)').matches;
   const tabletWidth = window.matchMedia('(max-width: 900px)').matches;
-  const hourHeight = mobileWidth ? Math.max(38, Math.min(48, 420 / hourCount))
+  const compressed = els.timetable.classList.contains('compressed');
+  const hourHeight = compressed || mobileWidth ? Math.max(38, Math.min(48, 420 / hourCount))
     : tabletWidth ? Math.max(48, Math.min(60, 520 / hourCount))
     : Math.max(58, Math.min(76, 640 / hourCount));
   const gridHeight = hourCount * hourHeight;
@@ -246,6 +250,8 @@ function renderCalendar(records) {
   els.calendar.style.setProperty('--hour-count', hourCount);
   els.calendar.style.setProperty('--grid-height', `${gridHeight}px`);
   els.calendar.dataset.mobileDay = activeMobileDay || activeDays[0];
+  document.body.classList.toggle('old-banner-design', activePalette === 'oldBanner');
+  els.timetable.classList.toggle('old-banner', activePalette === 'oldBanner');
   els.calendar.innerHTML = '';
 
   const timeColumn = document.createElement('div');
@@ -308,8 +314,8 @@ function renderCalendar(records) {
 
       card.className = 'class-card' + (duration < 70 ? ' compact' : '');
       const top = ((event.start - gridStart) / 60) * hourHeight;
-      const minimumCardHeight = mobileWidth ? 34 : tabletWidth ? 46 : 62;
-      const height = Math.max(minimumCardHeight, (duration / 60) * hourHeight - (mobileWidth ? 4 : 8));
+      const minimumCardHeight = compressed || mobileWidth ? 34 : tabletWidth ? 46 : 62;
+      const height = Math.max(minimumCardHeight, (duration / 60) * hourHeight - (compressed || mobileWidth ? 4 : 8));
       const columnWidth = 100 / event.columns;
       const inset = event.columns > 1 ? 3 : 5;
       const visibleWidth = Math.max(58, columnWidth - inset * 2);
@@ -418,6 +424,58 @@ els.dropZone.addEventListener('drop', e => {
   els.dropZone.classList.remove('dragging');
   handleFile(e.dataTransfer.files[0]);
 });
+let html2canvasLib;
+async function loadHtml2Canvas() {
+  if (html2canvasLib) return html2canvasLib;
+  html2canvasLib = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
+  return html2canvasLib.default || html2canvasLib;
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+els.image.addEventListener('click', async () => {
+  if (!window.__lastParsed) return;
+  const originalText = els.image.textContent;
+  els.image.disabled = true;
+  els.image.textContent = 'Preparing image…';
+  try {
+    const html2canvas = await loadHtml2Canvas();
+    const canvas = await html2canvas(els.timetable, {
+      scale: Math.min(3, Math.max(2, window.devicePixelRatio || 1)),
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false,
+      imageTimeout: 10000
+    });
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('Could not create the PNG image.');
+    const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
+    downloadBlob(blob, `banner-timetable-${term}.png`);
+  } catch (error) {
+    els.status.textContent = `Image export failed: ${error?.message || 'unknown error'}`;
+  } finally {
+    els.image.disabled = false;
+    els.image.textContent = originalText;
+  }
+});
+
+els.compress.addEventListener('click', () => {
+  const compressed = els.timetable.classList.toggle('compressed');
+  els.compress.classList.toggle('active', compressed);
+  els.compress.setAttribute('aria-pressed', String(compressed));
+  els.compress.textContent = compressed ? 'Expand' : 'Compress';
+  if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
+});
+
 els.print.addEventListener('click', () => {
   document.body.classList.add('exporting');
   window.requestAnimationFrame(() => window.print());

@@ -95,13 +95,14 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 .palette-option[data-palette="pink"] .palette-dots i:nth-child(3) { background: hsl(15 82% 54%); }
 .palette-option[data-palette="yellow"] .palette-dots i { background: hsl(24 88% 51%); }
 .palette-option[data-palette="yellow"] .palette-dots i:nth-child(2) { background: hsl(52 88% 48%); }
-.palette-option[data-palette="yellow"] .palette-dots i:nth-child(3) { background: hsl(82 73% 43%); }
+.palette-option[data-palette="yellow"] .palette-dots i:nth-child(3) { background: hsl(62 82% 46%); }
 .palette-option[data-palette="green"] .palette-dots i { background: hsl(110 66% 41%); }
 .palette-option[data-palette="green"] .palette-dots i:nth-child(2) { background: hsl(150 62% 42%); }
 .palette-option[data-palette="green"] .palette-dots i:nth-child(3) { background: hsl(186 66% 40%); }
-.palette-option[data-palette="rainbow"] .palette-dots i:nth-child(1) { background: hsl(202 78% 50%); }
-.palette-option[data-palette="rainbow"] .palette-dots i:nth-child(2) { background: hsl(324 77% 55%); }
-.palette-option[data-palette="rainbow"] .palette-dots i:nth-child(3) { background: hsl(52 88% 48%); }
+.palette-option[data-palette="rainbow"] .palette-dots i:nth-child(1) { background: hsl(198 82% 52%); }
+.palette-option[data-palette="rainbow"] .palette-dots i:nth-child(2) { background: hsl(248 74% 56%); }
+.palette-option[data-palette="rainbow"] .palette-dots i:nth-child(3) { background: hsl(294 72% 57%); }
+.palette-option[data-palette="oldBanner"] .palette-dots i:nth-child(1), .palette-option[data-palette="oldBanner"] .palette-dots i:nth-child(2), .palette-option[data-palette="oldBanner"] .palette-dots i:nth-child(3) { background: #e8e1cd; border: 1px solid #c4bcab; }
 .print-button { background: var(--accent); color: white; padding: 9px 13px; box-shadow: 0 2px 5px rgba(23,63,138,.15); }
 .print-button:hover, .upload-button:hover { filter: brightness(.96); }
 
@@ -175,7 +176,7 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
   .toolbar-actions { justify-content: stretch; flex-direction: column; align-items: stretch; width: 100%; gap: 8px; }
   .palette-wrap { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; }
   .palette-label { font-size: 10px; }
-  .palette { min-width: 0; width: 100%; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; padding: 3px; }
+  .palette { min-width: 0; width: 100%; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; padding: 3px; }
   .palette-option { justify-content: center; padding: 7px 5px; min-width: 0; }
   .palette-option .palette-name { display: none; }
   .palette-dots { gap: 3px; }
@@ -370,4 +371,110 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
     line-height: 1.05;
     letter-spacing: -.025em;
   }
+}
+
+
+/* Export controls */
+.secondary-export-button { background: #344054; }
+.compress-button { display: none; background: #475467; }
+.compress-button.active { background: var(--ink); }
+.print-button:disabled { opacity: .68; cursor: wait; }
+
+/* Desktop compact / "phone-like" view */
+@media (min-width: 901px) {
+  .compress-button { display: inline-flex; align-items: center; justify-content: center; }
+  .timetable.compressed { width: min(52vw, 620px); margin-inline: auto; }
+  .timetable.compressed .timetable-head { min-height: 66px; padding: 12px 14px; gap: 12px; }
+  .timetable.compressed .student-name { font-size: 18px; }
+  .timetable.compressed .term-name { font-size: 10px; margin-top: 3px; }
+  .timetable.compressed .metric { min-width: 48px; padding: 0 8px; }
+  .timetable.compressed .metric-value { font-size: 14px; }
+  .timetable.compressed .metric:first-child .metric-value { font-size: 17px; }
+  .timetable.compressed .metric-label { font-size: 7px; margin-top: 4px; }
+  .timetable.compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)); }
+  .timetable.compressed .day-header, .timetable.compressed .time-header { height: 32px; }
+  .timetable.compressed .day-header { font-size: 8px; }
+  .timetable.compressed .time-label { right: 4px; font-size: 7px; }
+  .timetable.compressed .class-card { border-radius: 5px; padding: 4px 4px 3px; border-left-width: 2px; }
+  .timetable.compressed .class-card.compact { padding: 3px 4px 2px; }
+  .timetable.compressed .class-code { font-size: 8.5px; letter-spacing: -.04em; }
+  .timetable.compressed .class-time { font-size: 7px; margin-top: 3px; letter-spacing: -.03em; }
+  .timetable.compressed .class-details { left: 4px; right: 4px; bottom: 3px; gap: 2px; }
+  .timetable.compressed .class-room, .timetable.compressed .class-meta { font-size: 6.2px; letter-spacing: -.03em; }
+}
+
+/* Small phone bezel: give the complete-week calendar a little breathing room while
+   keeping the dense overview layout and scaling its gutter down with the viewport. */
+@media (max-width: 600px) {
+  .app-shell { width: calc(100% - 24px); }
+  .calendar { grid-template-columns: 32px repeat(var(--day-count), minmax(0, 1fr)); }
+  .time-label { right: 3px; }
+  .class-code { font-size: 7.5px; }
+  .class-time { font-size: 6.4px; }
+  .class-room, .class-meta { font-size: 5.5px; }
+  .toolbar-actions { gap: 6px; }
+}
+@media (max-width: 360px) {
+  .app-shell { width: calc(100% - 18px); }
+  .calendar { grid-template-columns: 30px repeat(var(--day-count), minmax(0, 1fr)); }
+}
+
+/* Old Banner visual design */
+body.old-banner-design {
+  font-family: Arial, Helvetica, sans-serif;
+}
+body.old-banner-design .site-nav {
+  background: #ffffff;
+  color: #000000;
+  border-bottom: 1px solid #cccccc;
+  padding: 4px 8px;
+}
+body.old-banner-design .brand-link { color: #000000; font-weight: normal; letter-spacing: 0; }
+body.old-banner-design .text-button { color: #003366; font-size: 13px; font-weight: normal; border-radius: 0; padding: 4px 8px; }
+body.old-banner-design .text-button:hover, body.old-banner-design .text-button:focus-visible { background: #f3f3f3; color: #003366; }
+.timetable.old-banner { border-radius: 0; box-shadow: none; border: 1px solid #c4bcab; font-family: Arial, Helvetica, sans-serif; }
+.timetable.old-banner .timetable-head { background: #e8e1cd; color: #000000; min-height: 0; padding: 6px 8px; border-bottom: 1px solid #c4bcab; border-radius: 0; }
+.timetable.old-banner .student-name { font-size: 13px; font-weight: bold; letter-spacing: 0; }
+.timetable.old-banner .term-name { color: #000000; font-size: 12px; margin-top: 2px; }
+.timetable.old-banner .metric { color: #000000; min-width: 55px; padding: 0 8px; border-left: 1px solid #c4bcab; }
+.timetable.old-banner .metric-value, .timetable.old-banner .metric:first-child .metric-value { color: #000000; font-size: 13px; }
+.timetable.old-banner .metric-label { color: #000000; font-size: 8px; margin-top: 3px; }
+.timetable.old-banner .calendar { grid-template-columns: 55px repeat(var(--day-count), minmax(0, 1fr)); }
+.timetable.old-banner .day-header, .timetable.old-banner .time-header { background: #e8e1cd; color: #000000; border: 1px solid #c4bcab; border-top: 0; border-radius: 0; }
+.timetable.old-banner .day-header { height: 30px; font-size: 12px; font-weight: bold; letter-spacing: 0; text-transform: none; padding: 4px; }
+.timetable.old-banner .time-grid { background: #f4f1e4; border-right: 1px solid #d9d3c1; }
+.timetable.old-banner .day-grid { background: #ffffff; border-left: 1px solid #e3ded0; }
+.timetable.old-banner .hour-line { border-top: 1px solid #e3ded0; }
+.timetable.old-banner .time-label { color: #000000; font-size: 11px; font-weight: bold; right: 6px; }
+.timetable.old-banner .class-card { background: #f4f0e1; border: 1px solid #bcaf96; border-radius: 0; padding: 4px 6px; margin: 0; box-shadow: none; }
+.timetable.old-banner .class-card.compact { padding: 4px 6px; }
+.timetable.old-banner .class-code { color: #003399; font-size: 11px; font-weight: bold; letter-spacing: 0; }
+.timetable.old-banner .class-time { color: #000000; font-size: 10px; font-weight: normal; margin-top: 3px; letter-spacing: 0; }
+.timetable.old-banner .class-room, .timetable.old-banner .class-meta { color: #000000; font-size: 10px; }
+.timetable.old-banner .class-meta { color: #000000; }
+.timetable.old-banner .calendar .time-column { background: #f4f1e4; }
+
+@media (max-width: 900px) {
+  .timetable.old-banner .calendar { grid-template-columns: 34px repeat(var(--day-count), minmax(0, 1fr)); }
+  .timetable.old-banner .day-header { height: 28px; font-size: 10px; }
+  .timetable.old-banner .time-label { font-size: 8px; right: 3px; }
+  .timetable.old-banner .class-card { padding: 3px 4px 2px; }
+  .timetable.old-banner .class-code { font-size: 8.5px; }
+  .timetable.old-banner .class-time { font-size: 7px; }
+  .timetable.old-banner .class-room, .timetable.old-banner .class-meta { font-size: 6px; }
+}
+
+@media (max-width: 600px) {
+  .timetable.old-banner .calendar { grid-template-columns: 32px repeat(var(--day-count), minmax(0, 1fr)); }
+  .timetable.old-banner .day-header { height: 26px; font-size: 8px; }
+  .timetable.old-banner .time-label { font-size: 7px; }
+  .timetable.old-banner .class-card { padding: 3px 3px 2px; }
+  .timetable.old-banner .class-code { font-size: 7.2px; }
+  .timetable.old-banner .class-time { font-size: 6.1px; }
+  .timetable.old-banner .class-room, .timetable.old-banner .class-meta { font-size: 5.2px; }
+}
+
+@media print {
+  .secondary-export-button, .compress-button { display: none !important; }
+  .timetable.compressed { width: 100%; margin-inline: 0; }
 }
