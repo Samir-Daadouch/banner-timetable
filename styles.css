@@ -275,46 +275,6 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
   .class-room, .class-meta { font-size: 5.7px; }
 }
 
-/* Export / print: preserve the desktop timetable geometry and content even when the
-   user starts Export PDF from a phone-sized viewport. The browser handles final page scaling. */
-@page { size: A4 landscape; margin: 7mm; }
-@media print {
-  html, body { background: white; }
-  body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-  .no-print, .toolbar, .status, .upload-hero, .error-panel { display: none !important; }
-  .app-shell { width: 100%; max-width: none; margin: 0; padding: 0; }
-  .output { margin: 0; display: block !important; }
-  .timetable { border: 0; border-radius: 0; box-shadow: none; overflow: visible; page-break-inside: avoid; width: 100%; }
-  .timetable-head { min-height: 84px; padding: 18px 20px 16px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-  .student-name { font-size: 24px; }
-  .term-name { font-size: 13px; }
-  .metrics { display: flex; }
-  .metric { padding: 0 15px; min-width: 72px; }
-  .metric-value { font-size: 18px; }
-  .metric:first-child .metric-value { font-size: 23px; }
-  .metric-label { font-size: 8px; margin-top: 5px; }
-  .calendar {
-    display: grid !important;
-    grid-template-columns: 60px repeat(var(--day-count), minmax(0, 1fr)) !important;
-    min-height: 0;
-    --hour-height: clamp(34px, calc((100vh - 124px) / var(--hour-count)), 64px) !important;
-    --grid-height: calc(var(--hour-count) * var(--hour-height)) !important;
-  }
-  .calendar .day-column { display: block !important; }
-  .day-header, .time-header { height: 40px; }
-  .day-header { font-size: 10px; }
-  .time-label { font-size: 8px; right: 6px; }
-  .time-grid, .day-grid { height: var(--grid-height) !important; }
-  .class-card { padding: 8px 9px 7px; border-radius: 9px; }
-  .class-card.compact { padding: 7px 8px 6px; }
-  .class-code { font-size: 12px; }
-  .class-time { font-size: 10.5px; margin-top: 5px; }
-  .class-details { left: 9px; right: 8px; bottom: 6px; }
-  .class-room { font-size: 9px; }
-  .class-meta { font-size: 8.6px; }
-  * { overflow: visible; }
-}
-
 @media (max-width: 600px) {
   .calendar-shell { margin-left: 6px; margin-right: 6px; }
   .class-details { left: 7px; right: 7px; bottom: 5px; gap: 4px; }
@@ -334,7 +294,6 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 .close-button { border:0; background:#eef2f8; color:#344054; width:32px; height:32px; border-radius:50%; font-size:24px; cursor:pointer; }
 .tutorial-image { display:block; width:100%; max-width:none; height:auto; margin:10px 0 18px; border:1px solid #e1e6ef; border-radius:10px; }
 @media (max-width:600px) { .site-nav { padding-top:12px; } .brand-link { font-size:13px; } .creator-credit { display:none; } .text-button { font-size:11px; padding:7px 5px; } .info-panel { padding:14px; } }
-@media print { .site-nav, .info-panel { display:none !important; } }
 
 
 /* Final mobile card fix: keep course, room, and professor in separate rows.
@@ -475,10 +434,6 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
   .timetable.old-banner .class-room, .timetable.old-banner .class-meta { font-size: 5.2px; }
 }
 
-@media print {
-  .secondary-export-button, .compress-button { display: none !important; }
-  .timetable.compressed { width: 100%; margin-inline: 0; }
-}
 
 /* Calendar dark-mode toggle. The surrounding website stays permanently light. */
 .theme-button { background: #344054; }
@@ -543,17 +498,6 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
   .timetable.old-banner.compressed .class-time { font-size: 7px; margin-top: 3px; }
   .timetable.old-banner.compressed .class-room,
   .timetable.old-banner.compressed .class-meta { font-size: 6.2px; }
-}
-
-/* Native print styles used by Export PDF; the browser print engine
-   generates the final A4 landscape PDF from the exact current timetable. */
-@media print {
-  @page { size: A4 landscape; margin: 7mm; }
-  html, body { min-height: 0 !important; height: auto !important; }
-  .app-shell { padding-bottom: 0 !important; }
-  .output, .timetable { break-after: avoid !important; page-break-after: avoid !important; }
-  .timetable.compressed { width: min(52vw, 620px) !important; margin-inline: auto !important; }
-  .timetable.compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)) !important; }
 }
 
 .creator-credit { color:#7a8797; font-size:11px; white-space:nowrap; margin-right:4px; }
@@ -684,7 +628,6 @@ body { min-height: 100vh; transition: background-color .2s ease, color .2s ease;
 .close-button svg { display: block; }
 .close-button:hover, .close-button:focus-visible { background: #e1e7f2; color: #172033; }
 .close-button:active { transform: scale(.92); }
-@media print { .site-nav, .info-panel, .site-theme-toggle { display: none !important; } html, body { background: white !important; color: #111827 !important; } }
 
 /* Old Banner cards use the classic flat layout rather than the modern accent rail. */
 .timetable.old-banner .class-card::before { display: none; }
@@ -857,4 +800,79 @@ html, body { overflow-x: hidden; }
   .site-nav { overflow: visible; }
   .site-nav-links { max-width: 100%; overflow: visible; }
   .site-theme-toggle { margin-right: 0; }
+}
+
+
+/* Native PDF export: print only the timetable, preserve its on-screen appearance,
+   and let app.js apply a uniform zoom so the complete timetable occupies one A4
+   landscape page. */
+@page { size: A4 landscape; margin: 7mm; }
+@media print {
+  html, body {
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: hidden !important;
+  }
+  body {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+  body > .app-shell {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .site-nav,
+  .upload-hero,
+  .status,
+  .toolbar,
+  .info-panel,
+  .error-panel,
+  .no-print {
+    display: none !important;
+  }
+  #output {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    break-before: avoid !important;
+    break-after: avoid !important;
+    break-inside: avoid !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  #timetable {
+    display: block !important;
+    margin: 0 auto !important;
+    transform: none !important;
+    zoom: var(--print-zoom, 1) !important;
+    break-before: avoid !important;
+    break-after: avoid !important;
+    break-inside: avoid !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    overflow: hidden !important;
+    border: 1px solid var(--line-strong) !important;
+    border-radius: 14px !important;
+    box-shadow: var(--shadow) !important;
+  }
+  #timetable.compressed {
+    width: min(52vw, 620px) !important;
+    margin-inline: auto !important;
+  }
+  #timetable.super-compressed {
+    width: min(52vw, 620px) !important;
+    margin-inline: auto !important;
+  }
+  #timetable .day-nav { display: none !important; }
+  #timetable .calendar .day-column { display: block !important; }
+  #timetable .day-grid { overflow: hidden !important; }
 }

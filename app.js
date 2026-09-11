@@ -564,8 +564,21 @@ els.superCompress.addEventListener('click', () => {
 let printExportInProgress = false;
 
 function exportPdfOnePage() {
-  document.body.classList.add('exporting');
+  const timetable = els.timetable;
+  if (!timetable) throw new Error('Timetable is not available for PDF export.');
+
+  // Keep the exact on-screen timetable styling, then uniformly scale the finished
+  // timetable only as much as needed to fit the printable A4 landscape area.
+  const rect = timetable.getBoundingClientRect();
+  const pxPerMm = 96 / 25.4;
+  const printableWidth = (297 - 14) * pxPerMm;
+  const printableHeight = (210 - 14) * pxPerMm;
+  const scale = Math.min(1, printableWidth / Math.max(1, rect.width), printableHeight / Math.max(1, rect.height));
+
+  timetable.style.setProperty('--print-zoom', String(scale));
+  document.body.classList.add('print-export');
   printExportInProgress = true;
+
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => window.print());
   });
@@ -580,7 +593,8 @@ els.print.addEventListener('click', () => {
     exportPdfOnePage();
   } catch (error) {
     printExportInProgress = false;
-    document.body.classList.remove('exporting');
+    document.body.classList.remove('exporting', 'print-export');
+    els.timetable?.style.removeProperty('--print-zoom');
     els.print.disabled = false;
     els.print.textContent = originalText;
     console.error('PDF export failed', error);
@@ -590,7 +604,8 @@ els.print.addEventListener('click', () => {
 
 window.addEventListener('afterprint', () => {
   printExportInProgress = false;
-  document.body.classList.remove('exporting');
+  document.body.classList.remove('exporting', 'print-export');
+  els.timetable?.style.removeProperty('--print-zoom');
   els.print.disabled = false;
   els.print.textContent = 'Export PDF';
 });
