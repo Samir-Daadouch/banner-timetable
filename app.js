@@ -37,7 +37,6 @@ const els = {
   print: document.querySelector('#printButton'),
   image: document.querySelector('#imageButton'),
   compress: document.querySelector('#compressButton'),
-  theme: document.querySelector('#themeButton'),
   errorPanel: document.querySelector('#errorPanel'),
   errorText: document.querySelector('#errorText'),
   diagnostics: document.querySelector('#diagnostics')
@@ -57,7 +56,6 @@ const PALETTES = {
 let activePalette = 'blue';
 let currentParsed = null;
 let activeMobileDay = null;
-let darkMode = false;
 
 async function extractPdf(file) {
   const pdfjs = await loadPdfJs();
@@ -144,14 +142,22 @@ function formatRoom(event) {
 
   const buildingAliases = [
     [/^Engineering Building Left$/i, 'ELB'],
+    [/^Engineering Building Right$/i, 'EB2'],
     [/^Engineering Building$/i, 'EB'],
     [/^Engineering Science Building$/i, 'ESB'],
     [/^Chemistry Building$/i, 'CHM'],
-    [/^Science Building$/i, 'SB']
+    [/^Science Building$/i, 'SB'],
+    [/^School of Business Administrtn$/i, 'SBA'],
+    [/^Language Building$/i, 'LAN'],
+    [/^Physics Building$/i, 'PHY']
   ];
   for (const [pattern, alias] of buildingAliases) {
     if (pattern.test(building)) { building = alias; break; }
   }
+
+  // Some room numbers already carry the building code (e.g. "EB2-109"), which
+  // would otherwise duplicate the abbreviation we just prefixed.
+  if (building && new RegExp(`^${building}[\\s-]`, 'i').test(room)) building = '';
 
   return [campus, building, room].filter(Boolean).join(' ').trim() || 'Location not listed';
 }
@@ -282,6 +288,7 @@ function renderCalendar(records) {
     if (h < hourCount) {
       const label = document.createElement('div');
       label.className = 'time-label';
+      if (h === 0) label.classList.add('time-label-first');
       label.style.top = `${h * hourHeight}px`;
       label.textContent = formatMinutes(gridStart + h * 60);
       timeGrid.appendChild(label);
@@ -496,14 +503,6 @@ els.compress.addEventListener('click', () => {
   if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
 });
 
-els.theme.addEventListener('click', () => {
-  darkMode = !darkMode;
-  els.timetable.classList.toggle('calendar-dark', darkMode);
-  els.theme.classList.toggle('active', darkMode);
-  els.theme.setAttribute('aria-pressed', String(darkMode));
-  els.theme.textContent = darkMode ? 'Light' : 'Dark';
-});
-
 // Restore the older, browser-native PDF export path. It is more reliable than
 // rasterizing the calendar into a client-generated PDF and automatically respects
 // the active print CSS, including Compress and calendar dark mode.
@@ -530,3 +529,22 @@ tutorialButton.addEventListener('click', () => toggleInfoPanel(tutorialPanel, le
 legalButton.addEventListener('click', () => toggleInfoPanel(legalPanel, tutorialPanel));
 closeTutorial.addEventListener('click', () => tutorialPanel.classList.add('hidden'));
 closeLegal.addEventListener('click', () => legalPanel.classList.add('hidden'));
+
+// Single site-wide dark mode toggle: also drives the timetable/calendar appearance
+// so there is no seam between a dark page and a light calendar.
+const siteThemeToggle = document.querySelector('#siteThemeToggle');
+const SITE_THEME_KEY = 'bannerTimetableSiteTheme';
+function applySiteTheme(isDark) {
+  document.documentElement.classList.toggle('site-dark', isDark);
+  document.body.classList.toggle('site-dark', isDark);
+  els.timetable.classList.toggle('calendar-dark', isDark);
+  siteThemeToggle.setAttribute('aria-checked', String(isDark));
+}
+const storedSiteTheme = localStorage.getItem(SITE_THEME_KEY);
+const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+applySiteTheme(storedSiteTheme ? storedSiteTheme === 'dark' : prefersDark);
+siteThemeToggle.addEventListener('click', () => {
+  const isDark = !document.body.classList.contains('site-dark');
+  applySiteTheme(isDark);
+  localStorage.setItem(SITE_THEME_KEY, isDark ? 'dark' : 'light');
+});
