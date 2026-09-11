@@ -39,7 +39,6 @@ const els = {
   image: document.querySelector('#imageButton'),
   calendarExport: document.querySelector('#calendarExportButton'),
   compress: document.querySelector('#compressButton'),
-  theme: document.querySelector('#themeButton'),
   errorPanel: document.querySelector('#errorPanel'),
   errorText: document.querySelector('#errorText'),
   diagnostics: document.querySelector('#diagnostics')
@@ -59,7 +58,6 @@ const PALETTES = {
 let activePalette = 'blue';
 let currentParsed = null;
 let activeMobileDay = null;
-let darkMode = false;
 
 async function extractPdf(file) {
   const pdfjs = await loadPdfJs();
@@ -146,14 +144,22 @@ function formatRoom(event) {
 
   const buildingAliases = [
     [/^Engineering Building Left$/i, 'ELB'],
+    [/^Engineering Building Right$/i, 'EB2'],
     [/^Engineering Building$/i, 'EB'],
     [/^Engineering Science Building$/i, 'ESB'],
     [/^Chemistry Building$/i, 'CHM'],
-    [/^Science Building$/i, 'SB']
+    [/^Science Building$/i, 'SB'],
+    [/^School of Business Administrtn$/i, 'SBA'],
+    [/^Language Building$/i, 'LAN'],
+    [/^Physics Building$/i, 'PHY']
   ];
   for (const [pattern, alias] of buildingAliases) {
     if (pattern.test(building)) { building = alias; break; }
   }
+
+  // Some room numbers already carry the building code (e.g. "EB2-109"), which
+  // would otherwise duplicate the abbreviation we just prefixed.
+  if (building && new RegExp(`^${building}[\\s-]`, 'i').test(room)) building = '';
 
   return [campus, building, room].filter(Boolean).join(' ').trim() || 'Location not listed';
 }
@@ -254,7 +260,7 @@ function renderCalendar(records) {
   const mobileWidth = window.matchMedia('(max-width: 600px)').matches;
   const tabletWidth = window.matchMedia('(max-width: 900px)').matches;
   const compressed = els.timetable.classList.contains('compressed');
-  const hourHeight = compressed || mobileWidth ? Math.max(38, Math.min(48, 420 / hourCount))
+  const hourHeight = compressed || mobileWidth ? Math.max(38, Math.min(48, 400 / hourCount))
     : tabletWidth ? Math.max(48, Math.min(60, 520 / hourCount))
     : Math.max(58, Math.min(76, 640 / hourCount));
   const gridHeight = hourCount * hourHeight;
@@ -284,6 +290,7 @@ function renderCalendar(records) {
     if (h < hourCount) {
       const label = document.createElement('div');
       label.className = 'time-label';
+      if (h === 0) label.classList.add('time-label-first');
       label.style.top = `${h * hourHeight}px`;
       label.textContent = formatMinutes(gridStart + h * 60);
       timeGrid.appendChild(label);
@@ -396,7 +403,7 @@ function render(parsed, file) {
 
 async function handleFile(file) {
   if (!file || (!/application\/pdf/i.test(file.type) && !/\.pdf$/i.test(file.name))) {
-    showError('Please choose a Banner PDF file.', `Selected file type: ${file?.type || 'unknown'}`);
+    showError('This file does not appear to be a PDF. Please upload your Banner schedule PDF.');
     return;
   }
   els.status.textContent = 'Reading PDF locally…';
@@ -413,16 +420,15 @@ async function handleFile(file) {
     }
     render(parsed, file);
   } catch (error) {
-    showError(error.message || 'Unknown parsing error.', `${file.name}\n\n${error?.stack || error}`);
+    console.error('Banner PDF parsing failed', error);
+    showError('The parser could not read this PDF. Please make sure it is the official Banner schedule PDF.');
   }
 }
 
-function showError(message, diagnostics) {
+function showError(message) {
   els.output.classList.add('hidden');
   els.errorPanel.classList.remove('hidden');
-  const parts = String(message).split('\n\n');
-  els.errorText.textContent = parts[0];
-  els.diagnostics.textContent = diagnostics || parts.slice(1).join('\n\n');
+  els.errorText.textContent = String(message);
   els.status.textContent = '';
 }
 
@@ -460,8 +466,11 @@ function downloadBlob(blob, filename) {
 async function captureTimetable() {
   const html2canvas = getHtml2Canvas();
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  const bounds = els.timetable.getBoundingClientRect();
+  const maxDimension = 8000;
+  const scale = Math.min(4, maxDimension / Math.max(1, bounds.width));
   return html2canvas(els.timetable, {
-    scale: Math.min(3, Math.max(2, window.devicePixelRatio || 1)),
+    scale: Math.max(2, scale),
     backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
     useCORS: true,
     logging: false,
@@ -517,14 +526,6 @@ els.compress.addEventListener('click', () => {
   if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
 });
 
-els.theme.addEventListener('click', () => {
-  darkMode = !darkMode;
-  els.timetable.classList.toggle('calendar-dark', darkMode);
-  els.theme.classList.toggle('active', darkMode);
-  els.theme.setAttribute('aria-pressed', String(darkMode));
-  els.theme.textContent = darkMode ? 'Light' : 'Dark';
-});
-
 // Restore the older, browser-native PDF export path. It is more reliable than
 // rasterizing the calendar into a client-generated PDF and automatically respects
 // the active print CSS, including Compress and calendar dark mode.
@@ -551,3 +552,37 @@ tutorialButton.addEventListener('click', () => toggleInfoPanel(tutorialPanel, le
 legalButton.addEventListener('click', () => toggleInfoPanel(legalPanel, tutorialPanel));
 closeTutorial.addEventListener('click', () => tutorialPanel.classList.add('hidden'));
 closeLegal.addEventListener('click', () => legalPanel.classList.add('hidden'));
+
+const tutorialVideo = document.querySelector('#tutorialVideo');
+const loadTutorialVideo = document.querySelector('#loadTutorialVideo');
+loadTutorialVideo?.addEventListener('click', () => {
+  if (!tutorialVideo || tutorialVideo.querySelector('iframe')) return;
+  const videoId = tutorialVideo.dataset.videoId;
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?rel=0&modestbranding=1`;
+  iframe.title = 'Banner Timetable tutorial';
+  iframe.loading = 'lazy';
+  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+  iframe.allowFullscreen = true;
+  tutorialVideo.replaceChildren(iframe);
+});
+
+
+// Single site-wide dark mode toggle: also drives the timetable/calendar appearance
+// so there is no seam between a dark page and a light calendar.
+const siteThemeToggle = document.querySelector('#siteThemeToggle');
+const SITE_THEME_KEY = 'bannerTimetableSiteTheme';
+function applySiteTheme(isDark) {
+  document.documentElement.classList.toggle('site-dark', isDark);
+  document.body.classList.toggle('site-dark', isDark);
+  els.timetable.classList.toggle('calendar-dark', isDark);
+  siteThemeToggle.setAttribute('aria-checked', String(isDark));
+}
+const storedSiteTheme = localStorage.getItem(SITE_THEME_KEY);
+const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+applySiteTheme(storedSiteTheme ? storedSiteTheme === 'dark' : prefersDark);
+siteThemeToggle.addEventListener('click', () => {
+  const isDark = !document.body.classList.contains('site-dark');
+  applySiteTheme(isDark);
+  localStorage.setItem(SITE_THEME_KEY, isDark ? 'dark' : 'light');
+});

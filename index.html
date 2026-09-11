@@ -15,15 +15,19 @@
     <nav class="site-nav no-print" aria-label="Site navigation">
       <a class="brand-link" href="#top">Banner Timetable</a>
       <div class="site-nav-links">
-        <span class="creator-credit">Created by Samir Daadouch</span>
+        <span class="creator-credit">Created by <a href="https://www.linkedin.com/in/samir-daadouch/" target="_blank" rel="noopener noreferrer">Samir Daadouch</a></span>
         <button class="text-button" id="tutorialButton" type="button">Tutorial</button>
         <button class="text-button" id="legalButton" type="button">Terms & privacy</button>
+        <button class="site-theme-toggle" id="siteThemeToggle" type="button" role="switch" aria-checked="false" aria-label="Toggle dark mode">
+          <span class="site-theme-toggle-icon site-theme-toggle-icon-sun" aria-hidden="true">☀</span>
+          <span class="site-theme-toggle-knob" aria-hidden="true"></span>
+          <span class="site-theme-toggle-icon site-theme-toggle-icon-moon" aria-hidden="true">☾</span>
+        </button>
       </div>
     </nav>
     <div id="top"></div>
     <section class="upload-hero no-print" aria-label="Banner schedule upload">
       <div class="hero-copy">
-        <div class="eyebrow">BANNER TIMETABLE</div>
         <h1>Turn your Banner schedule into a clean weekly view.</h1>
         <p class="subhead">Everything is processed in your browser. No account, no backend, no AI parsing.</p>
         <div class="hero-points" aria-label="Privacy and compatibility notes">
@@ -31,6 +35,7 @@
           <span>Works on phone & desktop</span>
           <span>Print / save as PDF</span>
         </div>
+        <div class="hero-creator">Created by Samir Daadouch</div>
       </div>
       <div class="upload-card">
         <div class="upload-card-top">
@@ -55,13 +60,30 @@
     <section id="status" class="status no-print" aria-live="polite"></section>
 
     <section id="tutorialPanel" class="info-panel no-print hidden" aria-labelledby="tutorialTitle">
-      <div class="info-panel-head"><div><div class="eyebrow">QUICK GUIDE</div><h2 id="tutorialTitle">Export your Banner schedule</h2></div><button class="close-button" id="closeTutorial" type="button" aria-label="Close tutorial">×</button></div>
-      <img class="tutorial-image" src="image1.png" alt="Banner schedule page with the export-to-PDF button circled">
-      <p>Go to Banner and open <strong>Schedule</strong>. Find the button circled in the image, press it, and save the schedule as a PDF. Then upload that PDF to this tool — you’re done.</p>
+      <div class="info-panel-head"><div><div class="eyebrow">QUICK GUIDE</div><h2 id="tutorialTitle">Export your Banner schedule</h2></div><button class="close-button" id="closeTutorial" type="button" aria-label="Close tutorial"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>
+      <div class="tutorial-grid">
+        <div class="tutorial-visual">
+          <img class="tutorial-image" src="image1.png" alt="Banner schedule page with the export-to-PDF button circled">
+        </div>
+        <div class="tutorial-copy">
+          <p>Go to Banner and open <strong>Schedule</strong>. Find the button circled in the image, press it, and save the schedule as a PDF. Then upload that PDF to this tool — you’re done.</p>
+          <p class="tutorial-note">A short video tutorial is below. <strong>Created by Samir Daadouch</strong>. For bug reports or feedback, email <a href="mailto:b00110561@aus.edu">b00110561@aus.edu</a>.</p>
+        </div>
+      </div>
+      <div class="tutorial-video-wrap">
+        <div class="tutorial-video-head">Video tutorial</div>
+        <div id="tutorialVideo" class="tutorial-video" data-video-id="A_O1hVH48ng">
+          <button id="loadTutorialVideo" class="tutorial-video-placeholder" type="button" aria-label="Load tutorial video">
+            <span class="tutorial-play" aria-hidden="true">▶</span>
+            <span>Load video</span>
+          </button>
+          <noscript><a href="https://youtu.be/A_O1hVH48ng" target="_blank" rel="noreferrer">Watch the tutorial on YouTube</a></noscript>
+        </div>
+      </div>
     </section>
 
     <section id="legalPanel" class="info-panel no-print hidden" aria-labelledby="legalTitle">
-      <div class="info-panel-head"><div><div class="eyebrow">IMPORTANT</div><h2 id="legalTitle">Terms & privacy</h2></div><button class="close-button" id="closeLegal" type="button" aria-label="Close terms and privacy">×</button></div>
+      <div class="info-panel-head"><div><div class="eyebrow">IMPORTANT</div><h2 id="legalTitle">Terms & privacy</h2></div><button class="close-button" id="closeLegal" type="button" aria-label="Close terms and privacy"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>
       <p>This is an independent, client-side utility. It is not affiliated with, endorsed by, or operated by Banner, Ellucian, or any university.</p>
       <p>Your selected PDF is processed locally in your browser. The application does not upload, store, or transmit the PDF to an application server. Do not upload documents containing information you do not want displayed on your screen.</p>
       <p>The timetable is provided for convenience. Check the original university schedule for official registration, room, time, and academic information. Use of this tool is at your own discretion.</p>
@@ -82,7 +104,6 @@
           <button id="imageButton" class="print-button secondary-export-button" type="button">Export Image</button>
           <button id="calendarExportButton" class="print-button secondary-export-button" type="button">Export to Calendar (.ics)</button>
           <button id="compressButton" class="print-button compress-button" type="button" aria-pressed="false">Compress</button>
-          <button id="themeButton" class="print-button theme-button" type="button" aria-pressed="false">Dark</button>
           <button id="printButton" class="print-button" type="button">Export PDF</button>
         </div>
       </div>
@@ -101,12 +122,11 @@
     </section>
 
     <section id="errorPanel" class="error-panel no-print hidden">
-      <strong>We couldn't read this Banner PDF.</strong>
-      <p id="errorText"></p>
-      <details>
-        <summary>Parser diagnostics</summary>
-        <pre id="diagnostics"></pre>
-      </details>
+      <div>
+        <strong id="errorTitle">We couldn't read this Banner PDF.</strong>
+        <p id="errorText"></p>
+      </div>
+      <div class="error-contact">Bug or feedback? <strong>Samir Daadouch</strong> · <a href="mailto:b00110561@aus.edu">b00110561@aus.edu</a></div>
     </section>
   </main>
 
