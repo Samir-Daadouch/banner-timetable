@@ -381,29 +381,6 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 .compress-button.active { background: var(--ink); }
 .print-button:disabled { opacity: .68; cursor: wait; }
 
-/* Desktop compact / "phone-like" view */
-@media (min-width: 901px) {
-  .compress-button { display: inline-flex; align-items: center; justify-content: center; }
-  .timetable.compressed { width: min(52vw, 620px); margin-inline: auto; }
-  .timetable.compressed .timetable-head { min-height: 66px; padding: 12px 14px; gap: 12px; }
-  .timetable.compressed .student-name { font-size: 18px; }
-  .timetable.compressed .term-name { font-size: 10px; margin-top: 3px; }
-  .timetable.compressed .metric { min-width: 48px; padding: 0 8px; }
-  .timetable.compressed .metric-value { font-size: 14px; }
-  .timetable.compressed .metric:first-child .metric-value { font-size: 17px; }
-  .timetable.compressed .metric-label { font-size: 7px; margin-top: 4px; }
-  .timetable.compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)); }
-  .timetable.compressed .day-header, .timetable.compressed .time-header { height: 32px; }
-  .timetable.compressed .day-header { font-size: 8px; }
-  .timetable.compressed .time-label { right: 4px; font-size: 7px; }
-  .timetable.compressed .class-card { border-radius: 5px; padding: 4px 4px 3px; border-left-width: 2px; }
-  .timetable.compressed .class-card.compact { padding: 3px 4px 2px; }
-  .timetable.compressed .class-code { font-size: 8.5px; letter-spacing: -.04em; }
-  .timetable.compressed .class-time { font-size: 7px; margin-top: 3px; letter-spacing: -.03em; }
-  .timetable.compressed .class-details { left: 4px; right: 4px; bottom: 3px; gap: 2px; }
-  .timetable.compressed .class-room, .timetable.compressed .class-meta { font-size: 6.2px; letter-spacing: -.03em; }
-}
-
 /* Small phone bezel: give the complete-week calendar a little breathing room while
    keeping the dense overview layout and scaling its gutter down with the viewport. */
 @media (max-width: 600px) {
@@ -477,7 +454,6 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
 
 @media print {
   .secondary-export-button, .compress-button { display: none !important; }
-  .timetable.compressed { width: 100%; margin-inline: 0; }
 }
 
 /* Calendar dark-mode toggle. The surrounding website stays permanently light. */
@@ -526,25 +502,6 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
 .timetable.old-banner .class-code { font-weight: 700; }
 .timetable.old-banner .class-card { margin: 0 !important; }
 
-@media (min-width: 901px) {
-  .timetable.old-banner.compressed { width: min(52vw, 620px); margin-inline: auto; }
-  .timetable.old-banner.compressed .timetable-head { min-height: 66px; padding: 12px 14px; }
-  .timetable.old-banner.compressed .student-name { font-size: 18px; }
-  .timetable.old-banner.compressed .term-name { font-size: 10px; }
-  .timetable.old-banner.compressed .metric-value { font-size: 14px; }
-  .timetable.old-banner.compressed .metric-label { font-size: 7px; }
-  .timetable.old-banner.compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)); }
-  .timetable.old-banner.compressed .day-header,
-  .timetable.old-banner.compressed .time-header { height: 32px; }
-  .timetable.old-banner.compressed .day-header { font-size: 8px; }
-  .timetable.old-banner.compressed .time-label { font-size: 7px; right: 4px; }
-  .timetable.old-banner.compressed .class-card { padding: 4px 4px 3px; }
-  .timetable.old-banner.compressed .class-code { font-size: 8.5px; }
-  .timetable.old-banner.compressed .class-time { font-size: 7px; margin-top: 3px; }
-  .timetable.old-banner.compressed .class-room,
-  .timetable.old-banner.compressed .class-meta { font-size: 6.2px; }
-}
-
 /* Native print styles are retained as a fallback; the Export PDF button now
    generates a guaranteed single-page A4 PDF from the exact current timetable. */
 @media print {
@@ -552,8 +509,8 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
   html, body { min-height: 0 !important; height: auto !important; }
   .app-shell { padding-bottom: 0 !important; }
   .output, .timetable { break-after: avoid !important; page-break-after: avoid !important; }
-  .timetable.compressed { width: min(52vw, 620px) !important; margin-inline: auto !important; }
-  .timetable.compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)) !important; }
+  .timetable.compressed, .timetable.super-compressed { width: min(50vw, 600px) !important; margin-inline: auto !important; }
+  .timetable.compressed .calendar, .timetable.super-compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)) !important; }
 }
 
 .creator-credit { color:#7a8797; font-size:11px; white-space:nowrap; margin-right:4px; }
@@ -586,13 +543,6 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
   .timetable .class-time { font-size:8.2px; font-weight:850; }
   .timetable .class-room, .timetable .class-meta { font-size:6.9px; font-weight:700; }
   .timetable .day-header { font-size:9.5px; }
-}
-@media (max-width:900px) {
-  .timetable.compressed { width:min(50vw, 600px); }
-}
-@media (min-width:901px) {
-  .timetable.compressed { width:min(50vw, 600px); }
-  .timetable.old-banner.compressed { width:min(50vw, 600px); }
 }
 @media (max-width:600px) {
   .error-panel { align-items:flex-start; flex-direction:column; gap:8px; }
@@ -685,7 +635,8 @@ body { min-height: 100vh; transition: background-color .2s ease, color .2s ease;
 .close-button:hover, .close-button:focus-visible { background: #e1e7f2; color: #172033; }
 .close-button:active { transform: scale(.92); }
 @media print { .site-nav, .info-panel, .site-theme-toggle { display: none !important; } html, body { background: white !important; color: #111827 !important; } }
-@media print { .export-confetti { display: none !important; } html, body { overflow: hidden !important; } }
+@media print { .export-confetti, .site-theme-toggle, .super-compress-button, .compress-button { display: none !important; } html, body { overflow: hidden !important; } }
+.exporting .export-confetti { display: none !important; }
 
 /* Old Banner cards use the classic flat layout rather than the modern accent rail. */
 .timetable.old-banner .class-card::before { display: none; }
@@ -800,49 +751,81 @@ html.site-dark { scrollbar-color: #3a4557 #0d1220; }
 html.site-dark ::-webkit-scrollbar-thumb { background: #3a4557; border-color: #0d1220; }
 html.site-dark ::-webkit-scrollbar-thumb:hover { background: #485570; }
 
-@media (min-width: 901px) {
-  .timetable.old-banner.compressed { width: min(50vw, 600px); }
-  .timetable.compressed { width: min(50vw, 600px); }
-}
-@media (max-width: 900px) {
-  .timetable.compressed { width: min(50vw, 600px); }
-}
 
-
-/* Final polish: export controls, compressed typography, mobile containment, and video sizing. */
+/* Export controls */
 .image-export-button { background: var(--accent) !important; color: #fff !important; }
 .pdf-export-button, .calendar-export-button { background: #667085 !important; color: #fff !important; box-shadow: 0 2px 5px rgba(16,24,40,.10); }
-.compress-button { background: #98a2b3 !important; color: #fff !important; }
-.compress-button.active { background: #7f8a9b !important; }
+.compress-button, .super-compress-button { background: #98a2b3 !important; color: #fff !important; }
+.compress-button.active, .super-compress-button.active { background: #7f8a9b !important; }
+.super-compress-button { display: none; }
 
 .class-room { color: #344054; }
 .class-meta { color: #475467; }
 
+/* Compression modes: one deterministic implementation per mode. These mirror the
+   compact v2.6.6/v2.6.7 behavior rather than progressively shrinking the calendar. */
 @media (min-width: 901px) {
-  .timetable.compressed .class-code { font-size: 8px; line-height: 1.02; }
-  .timetable.compressed .class-time { font-size: 6.5px; margin-top: 2px; }
-  .timetable.compressed .class-room,
-  .timetable.compressed .class-meta { font-size: 5.7px; line-height: 1.05; }
-  .timetable.compressed .class-details { gap: 1px; bottom: 2px; }
+  .compress-button, .super-compress-button { display: inline-flex; align-items: center; justify-content: center; }
+
+  .timetable.compressed,
+  .timetable.super-compressed { width: min(50vw, 600px); margin-inline: auto; }
+
+  .timetable.compressed .timetable-head,
+  .timetable.super-compressed .timetable-head { min-height: 66px; padding: 12px 14px; gap: 12px; }
+  .timetable.compressed .student-name,
+  .timetable.super-compressed .student-name { font-size: 18px; }
+  .timetable.compressed .term-name,
+  .timetable.super-compressed .term-name { font-size: 10px; margin-top: 3px; }
+  .timetable.compressed .metric,
+  .timetable.super-compressed .metric { min-width: 48px; padding: 0 8px; }
+  .timetable.compressed .metric-value,
+  .timetable.super-compressed .metric-value { font-size: 14px; }
+  .timetable.compressed .metric:first-child .metric-value,
+  .timetable.super-compressed .metric:first-child .metric-value { font-size: 17px; }
+  .timetable.compressed .metric-label,
+  .timetable.super-compressed .metric-label { font-size: 7px; margin-top: 4px; }
+  .timetable.compressed .calendar,
+  .timetable.super-compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)); }
+  .timetable.compressed .day-header, .timetable.compressed .time-header,
+  .timetable.super-compressed .day-header, .timetable.super-compressed .time-header { height: 32px; }
+  .timetable.compressed .day-header,
+  .timetable.super-compressed .day-header { font-size: 8px; }
+  .timetable.compressed .time-label,
+  .timetable.super-compressed .time-label { right: 4px; font-size: 7px; }
+  .timetable.compressed .class-card,
+  .timetable.super-compressed .class-card { border-radius: 5px; padding: 4px 4px 3px; border-left-width: 2px; }
+  .timetable.compressed .class-card.compact,
+  .timetable.super-compressed .class-card.compact { padding: 3px 4px 2px; }
   .timetable.compressed .class-code,
-  .timetable.compressed .class-time { margin-left: 9px; }
-  .timetable.compressed .class-room { position: relative; left: 9px; }
+  .timetable.super-compressed .class-code { font-size: 8px; line-height: 1.02; }
+  .timetable.compressed .class-time,
+  .timetable.super-compressed .class-time { font-size: 6.5px; margin-top: 2px; }
+  .timetable.compressed .class-details,
+  .timetable.super-compressed .class-details { gap: 1px; bottom: 2px; }
+  .timetable.compressed .class-code, .timetable.compressed .class-time,
+  .timetable.super-compressed .class-code, .timetable.super-compressed .class-time { margin-left: 9px; }
+  .timetable.compressed .class-room,
+  .timetable.super-compressed .class-room { position: relative; left: 9px; }
+  .timetable.compressed .class-room, .timetable.compressed .class-meta,
+  .timetable.super-compressed .class-room, .timetable.super-compressed .class-meta { font-size: 5.7px; line-height: 1.05; }
 }
 
-/* Super compress uses the same compact desktop geometry as the v2.6.7 compressed view. */
-.super-compress-button { display: none; background: #98a2b3 !important; color: #fff !important; }
-.super-compress-button.active { background: #7f8a9b !important; }
-@media (min-width: 901px) {
-  .super-compress-button { display: inline-flex; align-items: center; justify-content: center; }
-  .timetable.super-compressed { width: min(50vw, 600px); margin-inline: auto; }
-  .timetable.super-compressed .class-code { font-size: 8px; line-height: 1.02; }
-  .timetable.super-compressed .class-time { font-size: 6.5px; margin-top: 2px; }
-  .timetable.super-compressed .class-room,
-  .timetable.super-compressed .class-meta { font-size: 5.7px; line-height: 1.05; }
-  .timetable.super-compressed .class-details { gap: 1px; bottom: 2px; }
-  .timetable.super-compressed .class-code,
-  .timetable.super-compressed .class-time { margin-left: 9px; }
-  .timetable.super-compressed .class-room { position: relative; left: 9px; }
+@media (min-width: 601px) and (max-width: 900px) {
+  .timetable.compressed .class-card,
+  .timetable.super-compressed .class-card { padding-left: 15px; }
+  .timetable.compressed .class-details,
+  .timetable.super-compressed .class-details { left: 15px; }
+}
+
+@media (max-width: 600px) {
+  .timetable.compressed .class-details,
+  .timetable.super-compressed .class-details { left: 9px !important; right: 4px; bottom: 5px; }
+  .timetable.compressed .class-details .class-room,
+  .timetable.compressed .class-details .class-meta,
+  .timetable.super-compressed .class-details .class-room,
+  .timetable.super-compressed .class-details .class-meta { position: relative; transform: translateY(-3px); }
+  .timetable.compressed .class-card,
+  .timetable.super-compressed .class-card { padding-left: 9px; }
 }
 
 .tutorial-video { width: min(100%, 760px); margin-inline: auto; }
@@ -878,16 +861,7 @@ html, body { overflow-x: hidden; }
   to { opacity: 0; transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot)) scale(1); }
 }
 
-@media (min-width: 601px) and (max-width: 900px) {
-  .timetable.compressed .class-card { padding-left: 15px; }
-  .timetable.compressed .class-details { left: 15px; }
-}
-
 @media (max-width: 600px) {
-  .class-details { left: 9px !important; right: 4px; bottom: 5px; }
-  .class-details .class-room,
-  .class-details .class-meta { position: relative; transform: translateY(-3px); }
-  .class-card { padding-left: 9px; }
   .site-nav { overflow: visible; }
   .site-nav-links { max-width: 100%; overflow: visible; }
   .site-theme-toggle { margin-right: 0; }

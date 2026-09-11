@@ -471,16 +471,17 @@ async function captureTimetable() {
   const html2canvas = getHtml2Canvas();
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   const bounds = els.timetable.getBoundingClientRect();
-  const maxDimension = 22000;
+  const maxDimension = 30000;
   const maxSourceDimension = Math.max(1, bounds.width, bounds.height);
   const deviceScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
-  const scale = Math.min(10, maxDimension / maxSourceDimension, deviceScale * 5);
+  const scale = Math.min(12, maxDimension / maxSourceDimension, deviceScale * 6);
   return html2canvas(els.timetable, {
-    scale: Math.max(3.5, scale),
+    scale: Math.max(4, scale),
     backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
     useCORS: true,
     logging: false,
     imageTimeout: 10000,
+    ignoreElements: element => element.classList?.contains('export-confetti'),
     removeContainer: true
   });
 }
@@ -582,10 +583,12 @@ els.superCompress.addEventListener('click', () => {
 els.print.addEventListener('click', () => {
   if (!window.__lastParsed) return;
   document.body.classList.add('exporting');
-  showExportConfetti();
   window.requestAnimationFrame(() => window.print());
 });
-window.addEventListener('afterprint', () => document.body.classList.remove('exporting'));
+window.addEventListener('afterprint', () => {
+  document.body.classList.remove('exporting');
+  showExportConfetti();
+});
 
 // Small, non-disruptive help/legal panels.
 const tutorialButton = document.querySelector('#tutorialButton');
