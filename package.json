@@ -1,6 +1,6 @@
 {
   "name": "banner-timetable",
-  "version": "2.6.7",
+  "version": "2.6.8",
   "private": true,
   "type": "module",
   "description": "Deterministic client-side Banner PDF timetable generator",

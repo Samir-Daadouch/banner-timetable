@@ -39,7 +39,7 @@ const els = {
   image: document.querySelector('#imageButton'),
   calendarExport: document.querySelector('#calendarExportButton'),
   compress: document.querySelector('#compressButton'),
-  mobilePreview: document.querySelector('#mobilePreviewButton'),
+  superCompress: document.querySelector('#superCompressButton'),
   errorPanel: document.querySelector('#errorPanel'),
   errorText: document.querySelector('#errorText'),
   diagnostics: document.querySelector('#diagnostics')
@@ -258,10 +258,11 @@ function renderCalendar(records) {
   const gridStart = Math.max(0, Math.floor((minStart - 60) / 60) * 60);
   const gridEnd = Math.min(24 * 60, Math.ceil((maxEnd + 60) / 60) * 60);
   const hourCount = Math.max(1, (gridEnd - gridStart) / 60);
-  const mobileWidth = window.matchMedia('(max-width: 600px)').matches || els.timetable.classList.contains('phone-preview');
+  const mobileWidth = window.matchMedia('(max-width: 600px)').matches;
   const tabletWidth = window.matchMedia('(max-width: 900px)').matches;
   const compressed = els.timetable.classList.contains('compressed');
-  const hourHeight = compressed || mobileWidth ? Math.max(38, Math.min(48, 400 / hourCount))
+  const superCompressed = els.timetable.classList.contains('super-compressed');
+  const hourHeight = compressed || superCompressed || mobileWidth ? Math.max(38, Math.min(48, 400 / hourCount))
     : tabletWidth ? Math.max(48, Math.min(60, 520 / hourCount))
     : Math.max(58, Math.min(76, 640 / hourCount));
   const gridHeight = hourCount * hourHeight;
@@ -334,10 +335,11 @@ function renderCalendar(records) {
       const professor = (event.end - event.start) < 60 ? '' : shortProfessor(event.instructor);
       const professorTitle = professor ? `title="${escapeHtml(professor)}"` : '';
       const location = formatRoom(event);
+      const hideRoomInSuper = superCompressed && duration < 50;
 
       card.className = 'class-card' + (duration < 70 ? ' compact' : '');
       const top = ((event.start - gridStart) / 60) * hourHeight;
-      const minimumCardHeight = compressed || mobileWidth ? 34 : tabletWidth ? 46 : 62;
+      const minimumCardHeight = compressed || superCompressed || mobileWidth ? 34 : tabletWidth ? 46 : 62;
       const height = Math.max(minimumCardHeight, (duration / 60) * hourHeight - (compressed || mobileWidth ? 4 : 8));
       const columnWidth = 100 / event.columns;
       const edgeToEdgeOldBanner = activePalette === 'oldBanner';
@@ -354,7 +356,7 @@ function renderCalendar(records) {
         <div class="class-code">${escapeHtml(shortCode)}</div>
         <div class="class-time">${escapeHtml(displayTime(event.startTime))} – ${escapeHtml(displayTime(event.endTime))}</div>
         <div class="class-details${professor ? '' : ' solo'}">
-          <span class="class-room" title="${escapeHtml(location)}">${escapeHtml(location)}</span>
+          ${hideRoomInSuper ? '' : `<span class="class-room" title="${escapeHtml(location)}">${escapeHtml(location)}</span>`}
           ${professor ? `<span class="class-meta" ${professorTitle}>${escapeHtml(professor)}</span>` : ''}
         </div>
       `;
@@ -547,6 +549,12 @@ els.image.addEventListener('click', async () => {
 });
 
 els.compress.addEventListener('click', () => {
+  if (els.timetable.classList.contains('super-compressed')) {
+    els.timetable.classList.remove('super-compressed');
+    els.superCompress.classList.remove('active');
+    els.superCompress.setAttribute('aria-pressed', 'false');
+    els.superCompress.textContent = 'Super compress';
+  }
   const compressed = els.timetable.classList.toggle('compressed');
   els.compress.classList.toggle('active', compressed);
   els.compress.setAttribute('aria-pressed', String(compressed));
@@ -554,10 +562,17 @@ els.compress.addEventListener('click', () => {
   if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
 });
 
-els.mobilePreview.addEventListener('click', () => {
-  const active = els.timetable.classList.toggle('phone-preview');
-  els.mobilePreview.classList.toggle('active', active);
-  els.mobilePreview.setAttribute('aria-pressed', String(active));
+els.superCompress.addEventListener('click', () => {
+  if (els.timetable.classList.contains('compressed')) {
+    els.timetable.classList.remove('compressed');
+    els.compress.classList.remove('active');
+    els.compress.setAttribute('aria-pressed', 'false');
+    els.compress.textContent = 'Compress';
+  }
+  const active = els.timetable.classList.toggle('super-compressed');
+  els.superCompress.classList.toggle('active', active);
+  els.superCompress.setAttribute('aria-pressed', String(active));
+  els.superCompress.textContent = active ? 'Expand' : 'Super compress';
   if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
 });
 
