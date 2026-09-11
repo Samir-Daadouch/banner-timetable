@@ -481,31 +481,10 @@ async function captureTimetable() {
     useCORS: true,
     logging: false,
     imageTimeout: 10000,
-    ignoreElements: element => element.classList?.contains('export-confetti'),
     removeContainer: true
   });
 }
 
-function showExportConfetti() {
-  const layer = document.createElement('div');
-  layer.className = 'export-confetti';
-  layer.setAttribute('aria-hidden', 'true');
-  const shapes = ['◆', '✦', '●', '■', '✳'];
-  for (let i = 0; i < 18; i += 1) {
-    const piece = document.createElement('span');
-    piece.className = 'confetti-piece';
-    piece.textContent = shapes[i % shapes.length];
-    piece.style.left = `${30 + Math.random() * 40}%`;
-    piece.style.top = `${34 + Math.random() * 12}%`;
-    piece.style.setProperty('--dx', `${(Math.random() - 0.5) * 220}px`);
-    piece.style.setProperty('--dy', `${70 + Math.random() * 140}px`);
-    piece.style.setProperty('--rot', `${(Math.random() - 0.5) * 720}deg`);
-    piece.style.animationDelay = `${Math.random() * 80}ms`;
-    layer.appendChild(piece);
-  }
-  document.body.appendChild(layer);
-  window.setTimeout(() => layer.remove(), 6850);
-}
 
 els.calendarExport.addEventListener('click', () => {
   const parsed = window.__lastParsed || currentParsed;
@@ -518,7 +497,6 @@ els.calendarExport.addEventListener('click', () => {
     const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
     const term = String(parsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
     downloadBlob(blob, `banner-timetable-${term}.ics`);
-    showExportConfetti();
   } catch (error) {
     console.error('Calendar export failed', error);
     els.status.textContent = `Calendar export failed: ${error?.message || 'unknown error'}`;
@@ -539,7 +517,6 @@ els.image.addEventListener('click', async () => {
     if (!blob) throw new Error('Could not create the PNG image.');
     const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
     downloadBlob(blob, `banner-timetable-${term}.png`);
-    showExportConfetti();
   } catch (error) {
     console.error('Image export failed', error);
     els.status.textContent = `Image export failed: ${error?.message || 'unknown error'}`;
@@ -587,7 +564,6 @@ els.print.addEventListener('click', () => {
 });
 window.addEventListener('afterprint', () => {
   document.body.classList.remove('exporting');
-  showExportConfetti();
 });
 
 // Small, non-disruptive help/legal panels.
