@@ -818,8 +818,8 @@ html.site-dark ::-webkit-scrollbar-thumb:hover { background: #485570; }
 .class-meta { color: #475467; }
 
 @media (min-width: 901px) {
-  .timetable.compressed .class-code { font-size: 11px; line-height: 1.02; }
-  .timetable.compressed .class-time { font-size: 11px; margin-top: 2px; }
+  .timetable.compressed .class-code { font-size: 10px; line-height: 1.02; }
+  .timetable.compressed .class-time { font-size: 7.5px; margin-top: 2px; }
   .timetable.compressed .class-room,
   .timetable.compressed .class-meta { font-size: 5.7px; line-height: 1.05; }
   .timetable.compressed .class-details { gap: 1px; bottom: 2px; }

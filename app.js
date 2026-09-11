@@ -564,10 +564,10 @@ async function exportPdfOnePage() {
 
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   const bounds = els.timetable.getBoundingClientRect();
-  const maxDimension = 24000;
+  const maxDimension = 12000;
   const maxSourceDimension = Math.max(1, bounds.width, bounds.height);
   const deviceScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
-  const scale = Math.min(10, maxDimension / maxSourceDimension, deviceScale * 5);
+  const scale = Math.min(4, maxDimension / maxSourceDimension, deviceScale * 2);
   const canvas = await html2canvas(els.timetable, {
     scale: Math.max(4, scale),
     backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
