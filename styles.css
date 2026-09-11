@@ -824,8 +824,8 @@ html.site-dark ::-webkit-scrollbar-thumb:hover { background: #485570; }
   .timetable.compressed .class-meta { font-size: 5.7px; line-height: 1.05; }
   .timetable.compressed .class-details { gap: 1px; bottom: 2px; }
   .timetable.compressed .class-code,
-  .timetable.compressed .class-time { margin-left: 6px; }
-  .timetable.compressed .class-room { position: relative; left: 6px; }
+  .timetable.compressed .class-time { margin-left: 9px; }
+  .timetable.compressed .class-room { position: relative; left: 9px; }
 }
 
 .tutorial-video { width: min(100%, 760px); margin-inline: auto; }
@@ -850,7 +850,7 @@ html, body { overflow-x: hidden; }
 .confetti-piece {
   position: absolute; font-size: 11px; line-height: 1; font-weight: 900;
   color: hsl(calc(200 + var(--n, 0) * 37) 80% 55%);
-  animation: export-confetti-fall 3400ms cubic-bezier(.2,.75,.25,1) forwards;
+  animation: export-confetti-fall 6800ms cubic-bezier(.2,.75,.25,1) forwards;
 }
 .confetti-piece:nth-child(3n) { color: #f59e0b; }
 .confetti-piece:nth-child(3n + 1) { color: #4f7cff; }
@@ -878,4 +878,58 @@ html, body { overflow-x: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   .confetti-piece { animation-duration: 1ms !important; }
+}
+
+
+/* Laptop phone-preview mode: use the same geometry and typography as the real mobile layout. */
+.mobile-preview-button { display: none; background: #667085 !important; color: #fff !important; }
+.mobile-preview-button.active { background: #344054 !important; }
+@media (min-width: 901px) {
+  .mobile-preview-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+  .timetable.phone-preview { width: 390px !important; max-width: calc(100vw - 40px); margin-inline: auto; }
+  .timetable.phone-preview .timetable-head { min-height: 0; padding: 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 10px; }
+  .timetable.phone-preview .student-name { font-size: 19px; }
+  .timetable.phone-preview .term-name { font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .timetable.phone-preview .metrics { margin-left: 0; gap: 0; }
+  .timetable.phone-preview .metric { padding: 0 7px; min-width: 45px; }
+  .timetable.phone-preview .metric:first-child { padding-left: 0; }
+  .timetable.phone-preview .metric-value { font-size: 15px; }
+  .timetable.phone-preview .metric:first-child .metric-value { font-size: 19px; }
+  .timetable.phone-preview .metric-label { font-size: 7px; margin-top: 4px; }
+  .timetable.phone-preview .day-nav { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); gap: 5px; padding: 8px; border-bottom: 1px solid var(--line); background: rgba(250,251,252,.97); backdrop-filter: blur(8px); }
+  .timetable.phone-preview .day-tab { border: 1px solid var(--line-strong); background: white; color: #667085; border-radius: 8px; padding: 7px 6px; font-size: 10px; font-weight: 800; cursor: pointer; }
+  .timetable.phone-preview .day-tab.active { background: var(--ink); color: white; border-color: var(--ink); }
+  .timetable.phone-preview .calendar { grid-template-columns: 49px 1fr; min-height: 0; }
+  .timetable.phone-preview .calendar .day-column { display: none; }
+  .timetable.phone-preview .calendar .day-column.mobile-active { display: block; }
+  .timetable.phone-preview .calendar .time-column { z-index: 2; }
+  .timetable.phone-preview .day-header { height: 36px; font-size: 10px; justify-content: flex-start; padding-left: 11px; }
+  .timetable.phone-preview .time-grid { background: #fafbfc; }
+  .timetable.phone-preview .time-label { right: 5px; font-size: 8px; }
+  .timetable.phone-preview .class-card { padding: 7px 8px 6px; border-left-width: 3px; }
+  .timetable.phone-preview .class-card.compact { padding: 6px 7px 5px; }
+  .timetable.phone-preview .class-code { font-size: 11.5px; }
+  .timetable.phone-preview .class-time { font-size: 9.5px; margin-top: 4px; }
+  .timetable.phone-preview .class-details { left: 8px; right: 7px; bottom: 6px; gap: 5px; }
+  .timetable.phone-preview .class-room { font-size: 8.4px; }
+  .timetable.phone-preview .class-meta { font-size: 8px; }
+}
+@media (max-width: 900px) { .mobile-preview-button { display: none !important; } }
+@media print {
+  .mobile-preview-button { display: none !important; }
+  .timetable.phone-preview { width: 390px !important; max-width: none !important; margin-inline: auto !important; }
+  .timetable.phone-preview .day-nav { display: grid !important; }
+  .timetable.phone-preview .calendar { grid-template-columns: 49px 1fr !important; }
+  .timetable.phone-preview .calendar .day-column { display: none !important; }
+  .timetable.phone-preview .calendar .day-column.mobile-active { display: block !important; }
+}
+
+/* Small typographic gain on larger calendars only; mobile/phone preview stays unchanged. */
+@media (min-width: 901px) {
+  .timetable:not(.phone-preview) .class-code { font-size: 12.7px; }
+  .timetable:not(.phone-preview) .class-time { font-size: 11px; }
+}
+@media (min-width: 601px) and (max-width: 900px) {
+  .timetable:not(.phone-preview) .class-code { font-size: 9.9px; }
+  .timetable:not(.phone-preview) .class-time { font-size: 8.4px; }
 }

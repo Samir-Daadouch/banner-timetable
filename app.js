@@ -39,6 +39,7 @@ const els = {
   image: document.querySelector('#imageButton'),
   calendarExport: document.querySelector('#calendarExportButton'),
   compress: document.querySelector('#compressButton'),
+  mobilePreview: document.querySelector('#mobilePreviewButton'),
   errorPanel: document.querySelector('#errorPanel'),
   errorText: document.querySelector('#errorText'),
   diagnostics: document.querySelector('#diagnostics')
@@ -257,7 +258,7 @@ function renderCalendar(records) {
   const gridStart = Math.max(0, Math.floor((minStart - 60) / 60) * 60);
   const gridEnd = Math.min(24 * 60, Math.ceil((maxEnd + 60) / 60) * 60);
   const hourCount = Math.max(1, (gridEnd - gridStart) / 60);
-  const mobileWidth = window.matchMedia('(max-width: 600px)').matches;
+  const mobileWidth = window.matchMedia('(max-width: 600px)').matches || els.timetable.classList.contains('phone-preview');
   const tabletWidth = window.matchMedia('(max-width: 900px)').matches;
   const compressed = els.timetable.classList.contains('compressed');
   const hourHeight = compressed || mobileWidth ? Math.max(38, Math.min(48, 400 / hourCount))
@@ -500,7 +501,7 @@ function showExportConfetti() {
     layer.appendChild(piece);
   }
   document.body.appendChild(layer);
-  window.setTimeout(() => layer.remove(), 3450);
+  window.setTimeout(() => layer.remove(), 6850);
 }
 
 els.calendarExport.addEventListener('click', () => {
@@ -550,6 +551,13 @@ els.compress.addEventListener('click', () => {
   els.compress.classList.toggle('active', compressed);
   els.compress.setAttribute('aria-pressed', String(compressed));
   els.compress.textContent = compressed ? 'Expand' : 'Compress';
+  if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
+});
+
+els.mobilePreview.addEventListener('click', () => {
+  const active = els.timetable.classList.toggle('phone-preview');
+  els.mobilePreview.classList.toggle('active', active);
+  els.mobilePreview.setAttribute('aria-pressed', String(active));
   if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
 });
 
