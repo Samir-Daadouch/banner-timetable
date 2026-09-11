@@ -55,6 +55,7 @@ const PALETTES = {
   oldBanner: { label: 'Old Banner', oldBanner: true, hues: [] }
 };
 let activePalette = 'blue';
+let currentParsed = null;
 let activeMobileDay = null;
 let darkMode = false;
 
@@ -121,15 +122,25 @@ function escapeHtml(value) {
 }
 
 function formatRoom(event) {
+  let campus = String(event.campus || '').trim();
   let building = String(event.building || '').trim();
   let room = String(event.room || '').trim().replace(/\s*-\s*/g, ' - ');
 
   // Banner location text is verbose. Keep the useful building abbreviation and
-  // room while removing campus-level prose from the visible card.
+  // room while removing campus-level prose for normal universities. Khalifa
+  // University is the exception: keep the campus/building context when present.
+  const includeCampus = Boolean(currentParsed?.isKhalifaUniversity);
   building = building
     .replace(/^Main Campus,\s*/i, '')
     .replace(/^Main Campus\s*/i, '')
     .trim();
+  if (includeCampus && campus) {
+    // Keep Khalifa campus context, while still presenting the normalized
+    // building name and room.
+    campus = campus.trim();
+  } else {
+    campus = '';
+  }
 
   const buildingAliases = [
     [/^Engineering Building Left$/i, 'ELB'],
@@ -142,7 +153,7 @@ function formatRoom(event) {
     if (pattern.test(building)) { building = alias; break; }
   }
 
-  return [building, room].filter(Boolean).join(' ').trim() || 'Location not listed';
+  return [campus, building, room].filter(Boolean).join(' ').trim() || 'Location not listed';
 }
 
 function colorForIndex(index, count) {
@@ -392,6 +403,7 @@ async function handleFile(file) {
   try {
     const pages = await extractPdf(file);
     const parsed = parseBanner(pages);
+  currentParsed = parsed;
     if (parsed.records.length !== 8) {
       els.status.textContent = `Parsed ${parsed.records.length} validated course blocks. Review the timetable before printing.`;
     } else {

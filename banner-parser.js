@@ -28,6 +28,7 @@ const DAY_LINE_RE = /^(?:(?:Sunday|Sun|Monday|Mon|Tuesday|Tue|Tues|Wednesday|Wed
 const LOCATION_START_RE = /^(?:Main Campus\s*,|(?:Online|Virtual|Remote)(?:\s+|$))/i;
 const REGISTERED_RE = /Registered\s*:\s*(\d+(?:\.\d+)?)/i;
 const TERM_RE = /([^\n]+?)\s+((?:Spring|Summer|Fall|Winter)\s+\d{4})\s+Schedule/i;
+const KHALIFA_RE = /khalifa/i;
 
 function clean(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -234,10 +235,11 @@ function boundedBlock(lines, headerIndex, nextHeaderIndex) {
 
 function parseLocation(text) {
   const value = clean(text);
-  if (!value) return { building: '', room: '' };
+  if (!value) return { campus: '', building: '', room: '' };
   const parts = value.split(',').map(clean).filter(Boolean);
-  if (parts.length === 1) return { building: '', room: parts[0] };
-  return { building: parts.slice(0, -1).join(', '), room: parts.at(-1) };
+  if (parts.length === 1) return { campus: '', building: '', room: parts[0] };
+  if (parts.length === 2) return { campus: '', building: parts[0], room: parts[1] };
+  return { campus: parts[0], building: parts.slice(0, -1).join(', '), room: parts.at(-1) };
 }
 
 function looksLikeInstructor(line) {
@@ -285,6 +287,7 @@ function parseMeeting(blockLines, anchor) {
     days: daysLine ? parseDays(daysLine.text) : [],
     startTime: timeMatch ? normalizeTime(timeMatch[1]) : '',
     endTime: timeMatch ? normalizeTime(timeMatch[2]) : '',
+    campus: location.campus,
     building: location.building,
     room: location.room,
     instructor,
@@ -414,6 +417,8 @@ export function parseBannerTextPages(pageData) {
   const header = fullText.match(TERM_RE);
   const studentName = header ? clean(header[1]) : '';
   const term = header ? clean(header[2]) : '';
+  const university = fullText.split('\n').map(clean).find(line => /university/i.test(line)) || '';
+  const isKhalifaUniversity = KHALIFA_RE.test(`${university} ${fullText.slice(0, 800)}`);
   const registeredMatch = fullText.match(REGISTERED_RE);
   const registeredCredits = registeredMatch ? Number(registeredMatch[1]) : null;
   const calculatedCredits = records.reduce((sum, record) => sum + Number(record.credits), 0);
@@ -430,6 +435,8 @@ export function parseBannerTextPages(pageData) {
     records,
     studentName,
     term,
+    university,
+    isKhalifaUniversity,
     registeredCredits,
     calculatedCredits,
     warnings,
