@@ -685,6 +685,7 @@ body { min-height: 100vh; transition: background-color .2s ease, color .2s ease;
 .close-button:hover, .close-button:focus-visible { background: #e1e7f2; color: #172033; }
 .close-button:active { transform: scale(.92); }
 @media print { .site-nav, .info-panel, .site-theme-toggle { display: none !important; } html, body { background: white !important; color: #111827 !important; } }
+@media print { .export-confetti { display: none !important; } html, body { overflow: hidden !important; } }
 
 /* Old Banner cards use the classic flat layout rather than the modern accent rail. */
 .timetable.old-banner .class-card::before { display: none; }
@@ -828,31 +829,20 @@ html.site-dark ::-webkit-scrollbar-thumb:hover { background: #485570; }
   .timetable.compressed .class-room { position: relative; left: 9px; }
 }
 
-/* Super compress keeps the current larger desktop typography while using the tighter compressed geometry. */
+/* Super compress uses the same compact desktop geometry as the v2.6.7 compressed view. */
 .super-compress-button { display: none; background: #98a2b3 !important; color: #fff !important; }
 .super-compress-button.active { background: #7f8a9b !important; }
 @media (min-width: 901px) {
   .super-compress-button { display: inline-flex; align-items: center; justify-content: center; }
   .timetable.super-compressed { width: min(50vw, 600px); margin-inline: auto; }
-  .timetable.super-compressed .timetable-head { min-height: 66px; padding: 12px 14px; gap: 12px; }
-  .timetable.super-compressed .student-name { font-size: 18px; }
-  .timetable.super-compressed .term-name { font-size: 10px; margin-top: 3px; }
-  .timetable.super-compressed .metric { min-width: 48px; padding: 0 8px; }
-  .timetable.super-compressed .metric-value { font-size: 14px; }
-  .timetable.super-compressed .metric:first-child .metric-value { font-size: 17px; }
-  .timetable.super-compressed .metric-label { font-size: 7px; margin-top: 4px; }
-  .timetable.super-compressed .calendar { grid-template-columns: 38px repeat(var(--day-count), minmax(0, 1fr)); }
-  .timetable.super-compressed .day-header,
-  .timetable.super-compressed .time-header { height: 32px; }
-  .timetable.super-compressed .day-header { font-size: 8px; }
-  .timetable.super-compressed .time-label { right: 4px; font-size: 7px; }
-  .timetable.super-compressed .class-card { border-radius: 5px; padding: 4px 4px 3px; border-left-width: 2px; }
-  .timetable.super-compressed .class-card.compact { padding: 3px 4px 2px; }
-  .timetable.super-compressed .class-code { font-size: 12.7px; line-height: 1.02; margin-left: 9px; }
-  .timetable.super-compressed .class-time { font-size: 11px; margin-top: 2px; letter-spacing: normal; margin-left: 9px; }
-  .timetable.super-compressed .class-details { left: 4px; right: 4px; bottom: 2px; gap: 2px; }
-  .timetable.super-compressed .class-room { font-size: 8.6px; line-height: 1.05; position: relative; left: 9px; }
-  .timetable.super-compressed .class-meta { font-size: 8.6px; line-height: 1.05; }
+  .timetable.super-compressed .class-code { font-size: 8px; line-height: 1.02; }
+  .timetable.super-compressed .class-time { font-size: 6.5px; margin-top: 2px; }
+  .timetable.super-compressed .class-room,
+  .timetable.super-compressed .class-meta { font-size: 5.7px; line-height: 1.05; }
+  .timetable.super-compressed .class-details { gap: 1px; bottom: 2px; }
+  .timetable.super-compressed .class-code,
+  .timetable.super-compressed .class-time { margin-left: 9px; }
+  .timetable.super-compressed .class-room { position: relative; left: 9px; }
 }
 
 .tutorial-video { width: min(100%, 760px); margin-inline: auto; }
