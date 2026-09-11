@@ -806,3 +806,35 @@ html.site-dark ::-webkit-scrollbar-thumb:hover { background: #485570; }
 @media (max-width: 900px) {
   .timetable.compressed { width: min(50vw, 600px); }
 }
+
+
+/* Final polish: export controls, compressed typography, mobile containment, and video sizing. */
+.image-export-button { background: var(--accent) !important; color: #fff !important; }
+.pdf-export-button, .calendar-export-button { background: #667085 !important; color: #fff !important; box-shadow: 0 2px 5px rgba(16,24,40,.10); }
+.compress-button { background: #98a2b3 !important; color: #fff !important; }
+.compress-button.active { background: #7f8a9b !important; }
+
+.class-room { color: #344054; }
+.class-meta { color: #475467; }
+
+@media (min-width: 901px) {
+  .timetable.compressed .class-code { font-size: 8px; line-height: 1.02; }
+  .timetable.compressed .class-time { font-size: 6.5px; margin-top: 2px; }
+  .timetable.compressed .class-room,
+  .timetable.compressed .class-meta { font-size: 5.7px; line-height: 1.05; }
+  .timetable.compressed .class-details { gap: 1px; bottom: 2px; }
+}
+
+.tutorial-video { width: min(100%, 820px); margin-inline: auto; }
+
+html, body { overflow-x: hidden; }
+.site-nav, .site-nav-links { min-width: 0; }
+.site-nav-links { flex-wrap: wrap; }
+
+@media (max-width: 600px) {
+  .app-shell { width: min(100%, calc(100% - 16px)); padding-top: 12px; }
+  .site-nav { width: 100%; flex-wrap: wrap; gap: 7px; }
+  .site-nav-links { flex: 1 1 auto; width: 100%; justify-content: flex-end; }
+  .site-theme-toggle { flex: 0 0 auto; }
+  .tutorial-video { width: 100%; }
+}

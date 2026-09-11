@@ -33,6 +33,23 @@ function formatDateTime(date, minutes) {
   return `${formatDate(date)}T${pad2(hour)}${pad2(minute)}00`;
 }
 
+function parseTimeMinutes(value) {
+  const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})\s*([AP])\.?M\.?$/i);
+  if (match) {
+    let hour = Number(match[1]);
+    const minute = Number(match[2]);
+    if (hour < 1 || hour > 12 || minute > 59) return NaN;
+    if (match[3].toUpperCase() === 'A') hour = hour === 12 ? 0 : hour;
+    else hour = hour === 12 ? 12 : hour + 12;
+    return hour * 60 + minute;
+  }
+  const twentyFour = String(value || '').trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!twentyFour) return NaN;
+  const hour = Number(twentyFour[1]);
+  const minute = Number(twentyFour[2]);
+  return hour >= 0 && hour <= 23 && minute <= 59 ? hour * 60 + minute : NaN;
+}
+
 function addDays(date, days) {
   const value = new Date(Date.UTC(date.year, date.month - 1, date.day + days));
   return {
@@ -81,11 +98,8 @@ export function generateIcs(parsed) {
   let index = 0;
 
   for (const record of records) {
-    const start = Number.isFinite(Number(record.startTime?.split(':')[0]))
-      ? Number(record.startTime.split(':')[0]) * 60 + Number(record.startTime.split(':')[1])
-      : NaN;
-    const [endHour, endMinute] = String(record.endTime || '').split(':').map(Number);
-    const end = Number.isFinite(endHour) && Number.isFinite(endMinute) ? endHour * 60 + endMinute : NaN;
+    const start = parseTimeMinutes(record.startTime);
+    const end = parseTimeMinutes(record.endTime);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
 
     const location = [record.building, record.room].map(value => String(value || '').trim()).filter(Boolean).join(' ').replace(/\s*[-–]\s*/g, ' - ');

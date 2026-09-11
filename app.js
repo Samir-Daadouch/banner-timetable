@@ -402,6 +402,7 @@ function render(parsed, file) {
 }
 
 async function handleFile(file) {
+  document.querySelector('#tutorialPanel')?.classList.add('hidden');
   if (!file || (!/application\/pdf/i.test(file.type) && !/\.pdf$/i.test(file.name))) {
     showError('This file does not appear to be a PDF. Please upload your Banner schedule PDF.');
     return;
@@ -467,10 +468,12 @@ async function captureTimetable() {
   const html2canvas = getHtml2Canvas();
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   const bounds = els.timetable.getBoundingClientRect();
-  const maxDimension = 8000;
-  const scale = Math.min(4, maxDimension / Math.max(1, bounds.width));
+  const maxDimension = 12000;
+  const maxSourceDimension = Math.max(1, bounds.width, bounds.height);
+  const deviceScale = Math.min(1.75, Math.max(1, window.devicePixelRatio || 1));
+  const scale = Math.min(6, maxDimension / maxSourceDimension, deviceScale * 3);
   return html2canvas(els.timetable, {
-    scale: Math.max(2, scale),
+    scale: Math.max(2.5, scale),
     backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
     useCORS: true,
     logging: false,
@@ -480,14 +483,15 @@ async function captureTimetable() {
 }
 
 els.calendarExport.addEventListener('click', () => {
-  if (!window.__lastParsed) return;
+  const parsed = window.__lastParsed || currentParsed;
+  if (!parsed) return;
   const originalText = els.calendarExport.textContent;
   els.calendarExport.disabled = true;
   els.calendarExport.textContent = 'Preparing…';
   try {
-    const ics = generateIcs(window.__lastParsed);
+    const ics = generateIcs(parsed);
     const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-    const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
+    const term = String(parsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
     downloadBlob(blob, `banner-timetable-${term}.ics`);
   } catch (error) {
     console.error('Calendar export failed', error);
