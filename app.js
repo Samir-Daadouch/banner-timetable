@@ -567,15 +567,19 @@ function exportPdfOnePage() {
   const timetable = els.timetable;
   if (!timetable) throw new Error('Timetable is not available for PDF export.');
 
-  // Keep the exact on-screen timetable styling, then uniformly scale the finished
-  // timetable only as much as needed to fit the printable A4 landscape area.
+  // Snapshot the exact on-screen dimensions before entering print mode. This is
+  // important because the browser's print viewport is a different width from
+  // the live page; using vw/% widths here was causing Compress and Banner mode
+  // to render differently in the PDF.
   const rect = timetable.getBoundingClientRect();
   const pxPerMm = 96 / 25.4;
   const printableWidth = (297 - 14) * pxPerMm;
   const printableHeight = (210 - 14) * pxPerMm;
   const scale = Math.min(1, printableWidth / Math.max(1, rect.width), printableHeight / Math.max(1, rect.height));
 
-  timetable.style.setProperty('--print-zoom', String(scale));
+  timetable.style.setProperty('--print-width', `${Math.ceil(rect.width)}px`);
+  timetable.style.setProperty('--print-height', `${Math.ceil(rect.height)}px`);
+  timetable.style.setProperty('--print-scale', String(scale));
   document.body.classList.add('print-export');
   printExportInProgress = true;
 
@@ -594,7 +598,9 @@ els.print.addEventListener('click', () => {
   } catch (error) {
     printExportInProgress = false;
     document.body.classList.remove('exporting', 'print-export');
-    els.timetable?.style.removeProperty('--print-zoom');
+    els.timetable?.style.removeProperty('--print-width');
+    els.timetable?.style.removeProperty('--print-height');
+    els.timetable?.style.removeProperty('--print-scale');
     els.print.disabled = false;
     els.print.textContent = originalText;
     console.error('PDF export failed', error);
@@ -605,7 +611,9 @@ els.print.addEventListener('click', () => {
 window.addEventListener('afterprint', () => {
   printExportInProgress = false;
   document.body.classList.remove('exporting', 'print-export');
-  els.timetable?.style.removeProperty('--print-zoom');
+  els.timetable?.style.removeProperty('--print-width');
+  els.timetable?.style.removeProperty('--print-height');
+  els.timetable?.style.removeProperty('--print-scale');
   els.print.disabled = false;
   els.print.textContent = 'Export PDF';
 });

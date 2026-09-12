@@ -278,7 +278,7 @@ function parseMeeting(blockLines, anchor) {
     if (instructorLine) instructor = instructorLine.text;
   }
 
-  const record = {
+  return {
     title: anchor.title,
     courseCode: anchor.code,
     section: anchor.section,
@@ -294,8 +294,42 @@ function parseMeeting(blockLines, anchor) {
     startDate: anchor.startDate,
     endDate: anchor.endDate
   };
+}
 
-  return record;
+/**
+ * Banner can encode one course as multiple meeting groups inside a single
+ * summary-table row. A common example is:
+ *   Wednesday
+ *   5:00 PM - 5:50 PM
+ *   ...
+ *   Tuesday, Thursday
+ *   2:00 PM - 3:15 PM
+ *   ...
+ *
+ * The old parser stopped at the first day/time/location trio. This splitter
+ * treats every day-line as the start of a new meeting group and bounds that
+ * group at the next day-line, so all separately listed day sets are retained.
+ */
+function parseMeetingGroups(blockLines, anchor) {
+  const dayIndices = [];
+  for (let i = 0; i < blockLines.length; i++) {
+    if (lineHasDays(blockLines[i])) dayIndices.push(i);
+  }
+
+  if (!dayIndices.length) {
+    return { records: [], groupCount: 0 };
+  }
+
+  const records = [];
+  for (let i = 0; i < dayIndices.length; i++) {
+    const start = dayIndices[i];
+    const end = dayIndices[i + 1] ?? blockLines.length;
+    const group = blockLines.slice(start, end);
+    const record = parseMeeting(group, anchor);
+    if (validateRecord(record).ok) records.push(record);
+  }
+
+  return { records, groupCount: dayIndices.length };
 }
 
 function validateRecord(record) {
@@ -344,10 +378,15 @@ function parsePageByRows(lines) {
     const current = anchors[i];
     const next = anchors[i + 1];
     const block = boundedBlock(lines, current.index, next?.index);
-    const record = parseMeeting(block, current.anchor);
-    const validation = validateRecord(record);
-    if (validation.ok) records.push(record);
-    else diagnostics.failures.push(`${current.anchor.code}-${current.anchor.section} CRN ${current.anchor.crn || '?'}: ${validation.reason}.`);
+    const grouped = parseMeetingGroups(block, current.anchor);
+    if (!grouped.records.length) {
+      diagnostics.failures.push(`${current.anchor.code}-${current.anchor.section} CRN ${current.anchor.crn || '?'}: no valid meeting groups found.`);
+      continue;
+    }
+    if (grouped.groupCount > 1) {
+      diagnostics.splitMeetingGroups = (diagnostics.splitMeetingGroups || 0) + (grouped.groupCount - 1);
+    }
+    records.push(...grouped.records);
   }
 
   return { records: dedupeRecords(records), diagnostics };
@@ -377,8 +416,8 @@ function fallbackParseFromText(text) {
     const next = anchors[i + 1];
     const block = lines.slice(current.index + 1, next?.index ?? lines.length)
       .map((text, offset) => ({ text, y: lines.length - current.index - offset - 1, items: [] }));
-    const record = parseMeeting(block, current.anchor);
-    if (validateRecord(record).ok) records.push(record);
+    const grouped = parseMeetingGroups(block, current.anchor);
+    records.push(...grouped.records);
   }
   return dedupeRecords(records);
 }
@@ -421,14 +460,23 @@ export function parseBannerTextPages(pageData) {
   const isKhalifaUniversity = KHALIFA_RE.test(`${university} ${fullText.slice(0, 800)}`);
   const registeredMatch = fullText.match(REGISTERED_RE);
   const registeredCredits = registeredMatch ? Number(registeredMatch[1]) : null;
-  const calculatedCredits = records.reduce((sum, record) => sum + Number(record.credits), 0);
+  const courseCreditKeys = new Set();
+  const calculatedCredits = records.reduce((sum, record) => {
+    const key = `${record.courseCode}|${record.section}|${record.crn}`;
+    if (courseCreditKeys.has(key)) return sum;
+    courseCreditKeys.add(key);
+    return sum + Number(record.credits);
+  }, 0);
   const warnings = [];
 
   if (registeredCredits != null && Math.abs(registeredCredits - calculatedCredits) > 0.001) {
     warnings.push(`Banner reports ${registeredCredits} registered credits; parsed course credits total ${calculatedCredits}.`);
   }
-  if (parsed.diagnostics.dateAnchors !== records.length) {
-    warnings.push(`Banner exposed ${parsed.diagnostics.dateAnchors} course rows; ${records.length} valid meetings were reconstructed.`);
+  // Multiple meeting groups are valid Banner data, so a larger meeting count
+  // than course-row count is expected after splitting a row. Only warn when
+  // course rows appear to have been lost during parsing.
+  if (parsed.diagnostics.dateAnchors > records.length) {
+    warnings.push(`Banner exposed ${parsed.diagnostics.dateAnchors} course rows; only ${records.length} valid meetings were reconstructed.`);
   }
 
   return {

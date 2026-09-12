@@ -803,29 +803,35 @@ html, body { overflow-x: hidden; }
 }
 
 
-/* Native PDF export: print only the timetable, preserve its on-screen appearance,
-   and let app.js apply a uniform zoom so the complete timetable occupies one A4
-   landscape page. */
+/* Native PDF export: print only the timetable, preserving its live on-screen
+   dimensions and styling while fitting the finished timetable onto one A4
+   landscape page. The fixed print canvas prevents trailing blank pages. */
 @page { size: A4 landscape; margin: 7mm; }
 @media print {
   html, body {
     width: 100% !important;
+    height: 100% !important;
     min-height: 0 !important;
-    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #fff !important;
     overflow: hidden !important;
+    background: #fff !important;
   }
   body {
+    position: fixed !important;
+    inset: 0 !important;
     print-color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
   }
   body > .app-shell {
+    position: relative !important;
     width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: hidden !important;
   }
   .site-nav,
   .upload-hero,
@@ -837,10 +843,15 @@ html, body { overflow-x: hidden; }
     display: none !important;
   }
   #output {
+    position: absolute !important;
+    inset: 0 !important;
     display: block !important;
     width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: hidden !important;
     break-before: avoid !important;
     break-after: avoid !important;
     break-inside: avoid !important;
@@ -849,28 +860,26 @@ html, body { overflow-x: hidden; }
     page-break-inside: avoid !important;
   }
   #timetable {
-    display: block !important;
-    margin: 0 auto !important;
-    transform: none !important;
-    zoom: var(--print-zoom, 1) !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 50% !important;
+    width: var(--print-width) !important;
+    height: var(--print-height) !important;
+    max-width: none !important;
+    margin: 0 !important;
+    transform: translateX(-50%) scale(var(--print-scale, 1)) !important;
+    transform-origin: top center !important;
+    zoom: 1 !important;
+    overflow: hidden !important;
     break-before: avoid !important;
     break-after: avoid !important;
     break-inside: avoid !important;
     page-break-before: avoid !important;
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
-    overflow: hidden !important;
     border: 1px solid var(--line-strong) !important;
     border-radius: 14px !important;
     box-shadow: var(--shadow) !important;
-  }
-  #timetable.compressed {
-    width: min(52vw, 620px) !important;
-    margin-inline: auto !important;
-  }
-  #timetable.super-compressed {
-    width: min(52vw, 620px) !important;
-    margin-inline: auto !important;
   }
   #timetable .day-nav { display: none !important; }
   #timetable .calendar .day-column { display: block !important; }
