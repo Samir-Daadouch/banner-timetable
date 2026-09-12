@@ -273,7 +273,6 @@ function renderCalendar(records) {
   els.calendar.style.setProperty('--hour-count', hourCount);
   els.calendar.style.setProperty('--grid-height', `${gridHeight}px`);
   els.calendar.dataset.mobileDay = activeMobileDay || activeDays[0];
-  document.body.classList.toggle('old-banner-design', activePalette === 'oldBanner');
   els.timetable.classList.toggle('old-banner', activePalette === 'oldBanner');
   els.calendar.innerHTML = '';
 
@@ -467,52 +466,122 @@ function downloadBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+function copyComputedTextStyles(source, target) {
+  const cs = getComputedStyle(source);
+  const properties = [
+    'font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch',
+    'line-height', 'letter-spacing', 'text-transform', 'text-align',
+    'text-decoration', 'text-overflow', 'white-space', 'color',
+    'background-color', 'background-image', 'background-size', 'background-position',
+    'background-repeat', 'border-top', 'border-right', 'border-bottom', 'border-left',
+    'border-radius', 'box-shadow', 'opacity', 'overflow', 'box-sizing'
+  ];
+  for (const property of properties) {
+    target.style.setProperty(property, cs.getPropertyValue(property));
+  }
+}
+
+function flattenElementForCapture(source, target, sourceRootRect) {
+  const rect = source.getBoundingClientRect();
+  const left = rect.left - sourceRootRect.left;
+  const top = rect.top - sourceRootRect.top;
+
+  target.style.position = 'absolute';
+  target.style.left = `${left}px`;
+  target.style.top = `${top}px`;
+  target.style.width = `${Math.max(0, rect.width)}px`;
+  target.style.height = `${Math.max(0, rect.height)}px`;
+  target.style.margin = '0';
+  target.style.inset = 'auto';
+  target.style.transform = 'none';
+  target.style.flex = 'none';
+  target.style.gridArea = 'auto';
+  target.style.alignSelf = 'auto';
+  target.style.justifySelf = 'auto';
+  target.style.contain = 'none';
+  copyComputedTextStyles(source, target);
+}
+
 async function captureTimetable() {
   const html2canvas = getHtml2Canvas();
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  const bounds = els.timetable.getBoundingClientRect();
-  const maxDimension = 30000;
-  const maxSourceDimension = Math.max(1, bounds.width, bounds.height);
-  const deviceScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
-  const scale = Math.min(12, maxDimension / maxSourceDimension, deviceScale * 6);
-  return html2canvas(els.timetable, {
-    scale: Math.max(4, scale),
-    backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
-    useCORS: true,
-    logging: false,
-    imageTimeout: 10000,
-    removeContainer: true
+  if (document.fonts?.ready) await document.fonts.ready;
+
+  const source = els.timetable;
+  const sourceRootRect = source.getBoundingClientRect();
+  const width = Math.max(1, sourceRootRect.width);
+  const height = Math.max(1, sourceRootRect.height);
+
+  // html2canvas does not reliably reproduce CSS Grid layout in every browser.
+  // For PDF export, freeze the already-rendered screen geometry into absolute
+  // coordinates first. This makes the export a pixel-faithful snapshot of what
+  // the user is actually seeing, including compressed card details and padding.
+  const stage = document.createElement('div');
+  stage.setAttribute('aria-hidden', 'true');
+  Object.assign(stage.style, {
+    position: 'absolute',
+    left: '-100000px',
+    top: '0',
+    width: `${width}px`,
+    height: `${height}px`,
+    overflow: 'hidden',
+    pointerEvents: 'none',
+    zIndex: '-1'
   });
+
+  const clone = source.cloneNode(true);
+  clone.removeAttribute('id');
+  Object.assign(clone.style, {
+    position: 'absolute',
+    left: '0px',
+    top: '0px',
+    width: `${width}px`,
+    height: `${height}px`,
+    minWidth: `${width}px`,
+    minHeight: `${height}px`,
+    maxWidth: `${width}px`,
+    maxHeight: `${height}px`,
+    margin: '0',
+    overflow: 'hidden'
+  });
+  copyComputedTextStyles(source, clone);
+  stage.appendChild(clone);
+  document.body.appendChild(stage);
+
+  const sourceNodes = [source, ...source.querySelectorAll('*')];
+  const cloneNodes = [clone, ...clone.querySelectorAll('*')];
+  const count = Math.min(sourceNodes.length, cloneNodes.length);
+  for (let i = 0; i < count; i++) {
+    flattenElementForCapture(sourceNodes[i], cloneNodes[i], sourceRootRect);
+  }
+
+  try {
+    const deviceScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    const scale = Math.min(6, Math.max(2, deviceScale * 3));
+    return await html2canvas(clone, {
+      scale,
+      width,
+      height,
+      backgroundColor: getComputedStyle(source).backgroundColor || '#ffffff',
+      useCORS: true,
+      logging: false,
+      imageTimeout: 10000,
+      removeContainer: true
+    });
+  } finally {
+    stage.remove();
+  }
 }
 
 let printExportInProgress = false;
-let printSnapshotUrl = null;
-
-function getPrintSheet() {
-  let sheet = document.querySelector('#pdfPrintSheet');
-  if (!sheet) {
-    sheet = document.createElement('div');
-    sheet.id = 'pdfPrintSheet';
-    sheet.setAttribute('aria-hidden', 'true');
-    sheet.innerHTML = '<img id="pdfPrintImage" alt="Timetable" />';
-    document.body.appendChild(sheet);
-  }
-  return {
-    sheet,
-    image: sheet.querySelector('#pdfPrintImage')
-  };
-}
+let printFrame = null;
 
 function cleanupPrintSnapshot() {
-  const { sheet, image } = getPrintSheet();
-  sheet.classList.remove('ready');
-  image.removeAttribute('src');
-  if (printSnapshotUrl) {
-    URL.revokeObjectURL(printSnapshotUrl);
-    printSnapshotUrl = null;
+  if (printFrame) {
+    printFrame.remove();
+    printFrame = null;
   }
   printExportInProgress = false;
-  document.body.classList.remove('print-export');
   els.print.disabled = false;
   els.print.textContent = 'Export PDF';
 }
@@ -520,19 +589,44 @@ function cleanupPrintSnapshot() {
 async function exportPdfOnePage() {
   if (!els.timetable) throw new Error('Timetable is not available for PDF export.');
   const canvas = await captureTimetable();
-  const { sheet, image } = getPrintSheet();
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-  if (!blob) throw new Error('Could not create the PDF snapshot.');
+  const dataUrl = canvas.toDataURL('image/png');
 
-  printSnapshotUrl = URL.createObjectURL(blob);
-  image.src = printSnapshotUrl;
-  image.style.aspectRatio = `${Math.max(1, canvas.width)} / ${Math.max(1, canvas.height)}`;
-  sheet.classList.add('ready');
-  document.body.classList.add('print-export');
+  const frame = document.createElement('iframe');
+  frame.setAttribute('aria-hidden', 'true');
+  Object.assign(frame.style, {
+    position: 'fixed',
+    width: '1px',
+    height: '1px',
+    right: '0',
+    bottom: '0',
+    border: '0',
+    opacity: '0',
+    pointerEvents: 'none'
+  });
+  document.body.appendChild(frame);
+  printFrame = frame;
+
+  const doc = frame.contentDocument;
+  doc.open();
+  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>Banner Timetable</title>
+<style>
+@page { size: A4 landscape; margin: 0; }
+html, body { width: 297mm; height: 210mm; margin: 0; padding: 0; overflow: hidden; background: #fff; }
+body { display: flex; align-items: center; justify-content: center; }
+img { display: block; width: 297mm; height: 210mm; max-width: 297mm; max-height: 210mm; object-fit: contain; object-position: center; margin: 0; padding: 0; border: 0; }
+</style></head><body><img id="print-image" alt="Timetable"></body></html>`);
+  doc.close();
+  const image = doc.getElementById('print-image');
+  frame.contentWindow.addEventListener('afterprint', cleanupPrintSnapshot, { once: true });
+  image.src = dataUrl;
+  await new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = () => reject(new Error('Could not prepare the PDF snapshot.'));
+  });
   printExportInProgress = true;
-
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  window.print();
+  frame.contentWindow.focus();
+  frame.contentWindow.print();
 }
 
 els.print.addEventListener('click', async () => {

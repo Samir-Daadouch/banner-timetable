@@ -380,18 +380,6 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 }
 
 /* Old Banner visual design */
-body.old-banner-design {
-  font-family: Arial, Helvetica, sans-serif;
-}
-body.old-banner-design .site-nav {
-  background: #ffffff;
-  color: #000000;
-  border-bottom: 1px solid #cccccc;
-  padding: 4px 8px;
-}
-body.old-banner-design .brand-link { color: #000000; font-weight: normal; letter-spacing: 0; }
-body.old-banner-design .text-button { color: #003366; font-size: 13px; font-weight: normal; border-radius: 0; padding: 4px 8px; }
-body.old-banner-design .text-button:hover, body.old-banner-design .text-button:focus-visible { background: #f3f3f3; color: #003366; }
 .timetable.old-banner { border-radius: 0; box-shadow: none; border: 1px solid #c4bcab; font-family: Arial, Helvetica, sans-serif; }
 .timetable.old-banner .timetable-head { background: #e8e1cd; color: #000000; min-height: 0; padding: 6px 8px; border-bottom: 1px solid #c4bcab; border-radius: 0; }
 .timetable.old-banner .student-name { font-size: 13px; font-weight: bold; letter-spacing: 0; }
@@ -463,23 +451,26 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
 
 /* Old Banner refinements: all timetable text uses the same Banner blue and is
    slightly heavier, while cards touch the grid edges like the original table. */
-.timetable.old-banner,
 .timetable.old-banner .timetable-head,
 .timetable.old-banner .metric,
 .timetable.old-banner .metric-value,
 .timetable.old-banner .metric-label,
 .timetable.old-banner .student-name,
-.timetable.old-banner .term-name,
-.timetable.old-banner .day-header,
-.timetable.old-banner .time-label,
-.timetable.old-banner .class-code,
-.timetable.old-banner .class-time,
-.timetable.old-banner .class-room,
-.timetable.old-banner .class-meta { color: #003399; font-weight: 600; }
+.timetable.old-banner .term-name { color: #003399; }
 .timetable.old-banner .student-name { font-weight: 700; }
-.timetable.old-banner .day-header { font-weight: 700; }
-.timetable.old-banner .class-code { font-weight: 700; }
 .timetable.old-banner .class-card { margin: 0 !important; }
+.timetable.old-banner .calendar .day-header,
+.timetable.old-banner .calendar .time-label,
+.timetable.old-banner .calendar .class-code,
+.timetable.old-banner .calendar .class-time,
+.timetable.old-banner .calendar .class-room,
+.timetable.old-banner .calendar .class-meta {
+  color: #003399;
+  font-weight: 650;
+}
+.timetable.old-banner .calendar .day-header { font-weight: 700; }
+.timetable.old-banner .calendar .class-code { font-weight: 700; }
+.timetable.old-banner .calendar .class-room { transform: translateX(-1px); }
 
 @media (min-width: 901px) {
   .timetable.old-banner.compressed { width: min(52vw, 620px); margin-inline: auto; }
@@ -803,96 +794,114 @@ html, body { overflow-x: hidden; }
 }
 
 
-/* Native PDF export: print only the timetable, preserving its live on-screen
-   dimensions and styling while fitting the finished timetable onto one A4
-   landscape page. The fixed print canvas prevents trailing blank pages. */
-@page { size: A4 landscape; margin: 7mm; }
-@media print {
-  html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    min-height: 0 !important;
-    width: auto !important;
-    height: auto !important;
-    overflow: visible !important;
-    background: #fff !important;
-    print-color-adjust: exact !important;
-    -webkit-print-color-adjust: exact !important;
-  }
+body.site-dark .info-panel p { color: #b7c0cf; }
+body.site-dark .close-button { background: #1c2536; color: #cbd3e0; }
+body.site-dark .close-button:hover, body.site-dark .close-button:focus-visible { background: #26314a; color: #eef2f7; }
+body.site-dark .tutorial-image { border-color: #2b3648; }
+body.site-dark .status { color: #9aa5b5; }
+body.site-dark .source-label { color: #9aa5b5; }
+body.site-dark .parse-message { color: #c3cad6; }
+body.site-dark .palette { background: #161d2b; border-color: var(--line-strong); }
+body.site-dark .palette-option { color: #9aa5b5; }
+body.site-dark .palette-option.active { color: #eef2f7; background: #26314a; }
+body.site-dark .palette-label { color: #9aa5b5; }
+body.site-dark .error-panel { background: #2a1815; border-color: #5c2b23; color: #ff9c8a; }
+body.site-dark .error-panel p { color: #ffb4a3; }
+body.site-dark .upload-button { background: #eef2f7; color: #111827; }
+body.site-dark .upload-button:hover { filter: brightness(.94); }
 
-  body.print-export > .app-shell {
-    position: static !important;
-    display: block !important;
-    width: auto !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-  }
+html { scrollbar-color: #c3cad6 #f4f5f7; }
+html.site-dark { scrollbar-color: #3a4557 #0d1220; }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--canvas); }
+::-webkit-scrollbar-thumb { background: #c3cad6; border-radius: 999px; border: 3px solid var(--canvas); }
+::-webkit-scrollbar-thumb:hover { background: #a8b1c0; }
+html.site-dark ::-webkit-scrollbar-thumb { background: #3a4557; border-color: #0d1220; }
+html.site-dark ::-webkit-scrollbar-thumb:hover { background: #485570; }
 
-  body.print-export > .app-shell > *:not(#output) {
-    display: none !important;
-  }
+@media (min-width: 901px) {
+  .timetable.old-banner.compressed { width: min(50vw, 600px); }
+  .timetable.compressed { width: min(50vw, 600px); }
+}
+@media (max-width: 900px) {
+  .timetable.compressed { width: min(50vw, 600px); }
+}
 
-  body.print-export #output {
-    position: relative !important;
-    display: block !important;
-    width: var(--print-output-width) !important;
-    height: var(--print-output-height) !important;
-    min-height: 0 !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    break-before: avoid !important;
-    break-after: avoid !important;
-    break-inside: avoid !important;
-    page-break-before: avoid !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
-  }
 
-  body.print-export #timetable {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    width: var(--print-width) !important;
-    height: var(--print-height) !important;
-    max-width: none !important;
-    margin: 0 !important;
-    transform: scale(var(--print-scale, 1)) !important;
-    transform-origin: top left !important;
-    zoom: 1 !important;
-    overflow: hidden !important;
-    break-before: avoid !important;
-    break-after: avoid !important;
-    break-inside: avoid !important;
-    page-break-before: avoid !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
-  }
+/* Final polish: export controls, compressed typography, mobile containment, and video sizing. */
+.image-export-button { background: var(--accent) !important; color: #fff !important; }
+.pdf-export-button, .calendar-export-button { background: #667085 !important; color: #fff !important; box-shadow: 0 2px 5px rgba(16,24,40,.10); }
+.compress-button { background: #98a2b3 !important; color: #fff !important; }
+.compress-button.active { background: #7f8a9b !important; }
 
-  body.print-export #timetable .day-nav,
-  body.print-export .toolbar,
-  body.print-export .no-print {
-    display: none !important;
-  }
+.class-room { color: #344054; }
+.class-meta { color: #475467; }
 
-  /* Preserve the exact live grid geometry captured before entering print media.
-     This is especially important for Compress, whose cards use percentage-based
-     left/width values inside the calendar grid. */
-  body.print-export #timetable .calendar {
-    grid-template-columns: var(--print-calendar-columns) !important;
-  }
+@media (min-width: 901px) {
+  .timetable.compressed .class-code { font-size: 10px; line-height: 1.02; }
+  .timetable.compressed .class-time { font-size: 7.5px; margin-top: 2px; }
+  .timetable.compressed .class-room,
+  .timetable.compressed .class-meta { font-size: 5.7px; line-height: 1.05; }
+  .timetable.compressed .class-details { gap: 1px; bottom: 2px; }
+  .timetable.compressed .class-code,
+  .timetable.compressed .class-time { margin-left: 9px; }
+  .timetable.compressed .class-room { position: relative; left: 9px; }
+}
 
-  body.print-export #timetable .class-card {
-    padding: var(--print-card-padding) !important;
-    border-radius: var(--print-card-radius) !important;
-    border-left-width: var(--print-card-border-left) !important;
-  }
-  body.print-export #timetable .class-code { font-size: var(--print-code-size) !important; }
-  body.print-export #timetable .class-time { font-size: var(--print-time-size) !important; }
-  body.print-export #timetable .class-room { font-size: var(--print-room-size) !important; }
-  body.print-export #timetable .class-meta { font-size: var(--print-meta-size) !important; }
+.tutorial-video { width: min(100%, 760px); margin-inline: auto; }
+
+html, body { overflow-x: hidden; }
+.site-nav, .site-nav-links { min-width: 0; }
+.site-nav-links { flex-wrap: wrap; }
+
+@media (max-width: 600px) {
+  .app-shell { width: min(100%, calc(100% - 16px)); padding-top: 12px; }
+  .site-nav { width: 100%; flex-wrap: wrap; gap: 7px; }
+  .site-nav-links { flex: 1 1 auto; width: 100%; justify-content: flex-end; }
+  .site-theme-toggle { flex: 0 0 auto; }
+  .tutorial-video { width: 100%; }
+}
+
+
+/* Final micro-adjustments: tablet card inset, mobile detail alignment, export feedback, and dark-nav containment. */
+@media (min-width: 601px) and (max-width: 900px) {
+  .timetable.compressed .class-card { padding-left: 15px; }
+  .timetable.compressed .class-details { left: 15px; }
+}
+
+@media (max-width: 600px) {
+  .class-details { left: 9px !important; right: 4px; bottom: 5px; }
+  .class-details .class-room,
+  .class-details .class-meta { position: relative; transform: translateY(-3px); }
+  .class-card { padding-left: 9px; }
+  .site-nav { overflow: visible; }
+  .site-nav-links { max-width: 100%; overflow: visible; }
+  .site-theme-toggle { margin-right: 0; }
+}
+
+/* v2.6.20 Old Banner isolation: palette styling is scoped to the timetable only. */
+.timetable.old-banner .calendar .day-header,
+.timetable.old-banner .calendar .time-label,
+.timetable.old-banner .calendar .class-code,
+.timetable.old-banner .calendar .class-time,
+.timetable.old-banner .calendar .class-room,
+.timetable.old-banner .calendar .class-meta {
+  font-weight: 700;
+}
+.timetable.old-banner .calendar .class-details { left: 6px; right: 6px; }
+.timetable.old-banner .calendar .class-room { transform: none; }
+
+@media (min-width: 901px) {
+  .timetable.old-banner.compressed .class-code,
+  .timetable.old-banner.compressed .class-time { margin-left: 0; }
+  .timetable.old-banner.compressed .calendar .class-details { left: 4px; right: 4px; }
+  .timetable.old-banner.compressed .calendar .class-room { left: 0; transform: none; }
+}
+
+@media (max-width: 900px) {
+  .timetable.old-banner .calendar .class-details { left: 4px; right: 4px; }
+}
+
+@media (max-width: 600px) {
+  .timetable.old-banner .calendar .class-details { left: 3px; right: 3px; }
 }
