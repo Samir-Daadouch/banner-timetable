@@ -273,7 +273,6 @@ function renderCalendar(records) {
   els.calendar.style.setProperty('--hour-count', hourCount);
   els.calendar.style.setProperty('--grid-height', `${gridHeight}px`);
   els.calendar.dataset.mobileDay = activeMobileDay || activeDays[0];
-  document.body.classList.toggle('old-banner-design', activePalette === 'oldBanner');
   els.timetable.classList.toggle('old-banner', activePalette === 'oldBanner');
   els.calendar.innerHTML = '';
 
@@ -332,12 +331,13 @@ function renderCalendar(records) {
       const family = courseFamilyKey(event.courseCode);
       const hue = colors.get(family) ?? 210;
       const shortCode = `${event.courseCode} · ${event.section}`;
-      const professor = (event.end - event.start) < 60 ? '' : shortProfessor(event.instructor);
+      const shortClass = (event.end - event.start) < 50;
+      const professor = (shortClass || (event.end - event.start) >= 60) ? shortProfessor(event.instructor) : '';
       const professorTitle = professor ? `title="${escapeHtml(professor)}"` : '';
       const location = formatRoom(event);
       const hideRoomInSuper = superCompressed && duration < 50;
 
-      card.className = 'class-card' + (duration < 70 ? ' compact' : '');
+      card.className = 'class-card' + (duration < 70 ? ' compact' : '') + (duration < 50 ? ' short-class' : '');
       const top = ((event.start - gridStart) / 60) * hourHeight;
       const minimumCardHeight = compressed || superCompressed || mobileWidth ? 34 : tabletWidth ? 46 : 62;
       const height = Math.max(minimumCardHeight, (duration / 60) * hourHeight - (compressed || mobileWidth ? 4 : 8));
@@ -557,66 +557,60 @@ els.superCompress.addEventListener('click', () => {
 }
 
 
-// Export PDF using the browser's native print engine. This intentionally has
-// no third-party PDF dependency, so PDF export cannot fail because a CDN
-// library failed to load. The existing @page / @media print rules force the
-// timetable onto one A4 landscape page.
+// Export PDF by capturing the already-rendered timetable and printing that image.
+// This avoids reflowing the live timetable through the print stylesheet.
 let printExportInProgress = false;
+let pdfPrintPreview = null;
 
-function exportPdfOnePage() {
+async function exportPdfOnePage() {
   const timetable = els.timetable;
   if (!timetable) throw new Error('Timetable is not available for PDF export.');
+  if (typeof window.html2canvas !== 'function') {
+    throw new Error('Image export library could not be loaded. Please reload the page and try again.');
+  }
 
-  // Snapshot the exact on-screen dimensions before entering print mode. This is
-  // important because the browser's print viewport is a different width from
-  // the live page; using vw/% widths here was causing Compress and Banner mode
-  // to render differently in the PDF.
-  const rect = timetable.getBoundingClientRect();
-  const pxPerMm = 96 / 25.4;
-  const printableWidth = (297 - 14) * pxPerMm;
-  const printableHeight = (210 - 14) * pxPerMm;
-  const scale = Math.min(1, printableWidth / Math.max(1, rect.width), printableHeight / Math.max(1, rect.height));
+  if (document.fonts?.ready) await document.fonts.ready;
+  const canvas = await captureTimetable();
+  const dataUrl = canvas.toDataURL('image/png');
 
-  timetable.style.setProperty('--print-width', `${Math.ceil(rect.width)}px`);
-  timetable.style.setProperty('--print-height', `${Math.ceil(rect.height)}px`);
-  timetable.style.setProperty('--print-scale', String(scale));
-  document.body.classList.add('print-export');
+  pdfPrintPreview = document.createElement('div');
+  pdfPrintPreview.className = 'pdf-print-preview';
+  pdfPrintPreview.innerHTML = `<img src="${dataUrl}" alt="Timetable PDF export">`;
+  document.body.appendChild(pdfPrintPreview);
+  document.body.classList.add('pdf-printing');
   printExportInProgress = true;
 
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => window.print());
-  });
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  window.print();
 }
 
-els.print.addEventListener('click', () => {
+function cleanupPdfPrintPreview() {
+  printExportInProgress = false;
+  document.body.classList.remove('pdf-printing');
+  if (pdfPrintPreview) {
+    pdfPrintPreview.remove();
+    pdfPrintPreview = null;
+  }
+  els.print.disabled = false;
+  els.print.textContent = 'Export PDF';
+}
+
+els.print.addEventListener('click', async () => {
   if (!window.__lastParsed || printExportInProgress) return;
   const originalText = els.print.textContent;
   els.print.disabled = true;
   els.print.textContent = 'Preparing PDF…';
   try {
-    exportPdfOnePage();
+    await exportPdfOnePage();
   } catch (error) {
-    printExportInProgress = false;
-    document.body.classList.remove('exporting', 'print-export');
-    els.timetable?.style.removeProperty('--print-width');
-    els.timetable?.style.removeProperty('--print-height');
-    els.timetable?.style.removeProperty('--print-scale');
-    els.print.disabled = false;
+    cleanupPdfPrintPreview();
     els.print.textContent = originalText;
     console.error('PDF export failed', error);
     els.status.textContent = `PDF export failed: ${error?.message || 'unknown error'}`;
   }
 });
 
-window.addEventListener('afterprint', () => {
-  printExportInProgress = false;
-  document.body.classList.remove('exporting', 'print-export');
-  els.timetable?.style.removeProperty('--print-width');
-  els.timetable?.style.removeProperty('--print-height');
-  els.timetable?.style.removeProperty('--print-scale');
-  els.print.disabled = false;
-  els.print.textContent = 'Export PDF';
-});
+window.addEventListener('afterprint', cleanupPdfPrintPreview);
 
 // Small, non-disruptive help/legal panels.
 const tutorialButton = document.querySelector('#tutorialButton');

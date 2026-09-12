@@ -380,18 +380,6 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 }
 
 /* Old Banner visual design */
-body.old-banner-design {
-  font-family: Arial, Helvetica, sans-serif;
-}
-body.old-banner-design .site-nav {
-  background: #ffffff;
-  color: #000000;
-  border-bottom: 1px solid #cccccc;
-  padding: 4px 8px;
-}
-body.old-banner-design .brand-link { color: #000000; font-weight: normal; letter-spacing: 0; }
-body.old-banner-design .text-button { color: #003366; font-size: 13px; font-weight: normal; border-radius: 0; padding: 4px 8px; }
-body.old-banner-design .text-button:hover, body.old-banner-design .text-button:focus-visible { background: #f3f3f3; color: #003366; }
 .timetable.old-banner { border-radius: 0; box-shadow: none; border: 1px solid #c4bcab; font-family: Arial, Helvetica, sans-serif; }
 .timetable.old-banner .timetable-head { background: #e8e1cd; color: #000000; min-height: 0; padding: 6px 8px; border-bottom: 1px solid #c4bcab; border-radius: 0; }
 .timetable.old-banner .student-name { font-size: 13px; font-weight: bold; letter-spacing: 0; }
@@ -475,7 +463,8 @@ body.old-banner-design .text-button:hover, body.old-banner-design .text-button:f
 .timetable.old-banner .class-code,
 .timetable.old-banner .class-time,
 .timetable.old-banner .class-room,
-.timetable.old-banner .class-meta { color: #003399; font-weight: 600; }
+.timetable.old-banner .class-meta { color: #003399; font-weight: 700; }
+.timetable.old-banner .class-room { position: relative; left: 5px; }
 .timetable.old-banner .student-name { font-weight: 700; }
 .timetable.old-banner .day-header { font-weight: 700; }
 .timetable.old-banner .class-code { font-weight: 700; }
@@ -792,6 +781,11 @@ html, body { overflow-x: hidden; }
   .timetable.compressed .class-details { left: 15px; }
 }
 
+@media (max-width: 900px) {
+  .timetable .class-card.short-class .class-details { grid-template-columns: 1fr; }
+  .timetable .class-card.short-class .class-meta { display: none !important; }
+}
+
 @media (max-width: 600px) {
   .class-details { left: 9px !important; right: 4px; bottom: 5px; }
   .class-details .class-room,
@@ -803,85 +797,38 @@ html, body { overflow-x: hidden; }
 }
 
 
-/* Native PDF export: print only the timetable, preserving its live on-screen
-   dimensions and styling while fitting the finished timetable onto one A4
-   landscape page. The fixed print canvas prevents trailing blank pages. */
-@page { size: A4 landscape; margin: 7mm; }
+/* PDF export: print a captured image of the live timetable so the PDF matches
+   the on-screen layout exactly instead of reflowing through print CSS. */
+.pdf-print-preview { display: none; }
+@page { size: A4 landscape; margin: 0; }
 @media print {
   html, body {
     width: 100% !important;
     height: 100% !important;
-    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
     background: #fff !important;
-  }
-  body {
-    position: fixed !important;
-    inset: 0 !important;
     print-color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
   }
-  body > .app-shell {
-    position: relative !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    max-width: none !important;
+  body > * { display: none !important; }
+  body.pdf-printing > .pdf-print-preview {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow: hidden !important;
+    background: #fff !important;
   }
-  .site-nav,
-  .upload-hero,
-  .status,
-  .toolbar,
-  .info-panel,
-  .error-panel,
-  .no-print {
-    display: none !important;
-  }
-  #output {
-    position: absolute !important;
-    inset: 0 !important;
+  body.pdf-printing > .pdf-print-preview img {
     display: block !important;
     width: 100% !important;
     height: 100% !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    break-before: avoid !important;
-    break-after: avoid !important;
-    break-inside: avoid !important;
-    page-break-before: avoid !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
+    object-fit: contain !important;
+    object-position: center !important;
   }
-  #timetable {
-    position: absolute !important;
-    top: 0 !important;
-    left: 50% !important;
-    width: var(--print-width) !important;
-    height: var(--print-height) !important;
-    max-width: none !important;
-    margin: 0 !important;
-    transform: translateX(-50%) scale(var(--print-scale, 1)) !important;
-    transform-origin: top center !important;
-    zoom: 1 !important;
-    overflow: hidden !important;
-    break-before: avoid !important;
-    break-after: avoid !important;
-    break-inside: avoid !important;
-    page-break-before: avoid !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
-    border: 1px solid var(--line-strong) !important;
-    border-radius: 14px !important;
-    box-shadow: var(--shadow) !important;
-  }
-  #timetable .day-nav { display: none !important; }
-  #timetable .calendar .day-column { display: block !important; }
-  #timetable .day-grid { overflow: hidden !important; }
 }
