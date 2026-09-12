@@ -332,7 +332,7 @@ function renderCalendar(records) {
       const family = courseFamilyKey(event.courseCode);
       const hue = colors.get(family) ?? 210;
       const shortCode = `${event.courseCode} · ${event.section}`;
-      const professor = (mobileWidth && (event.end - event.start) < 60) ? '' : shortProfessor(event.instructor);
+      const professor = (event.end - event.start) < 60 ? '' : shortProfessor(event.instructor);
       const professorTitle = professor ? `title="${escapeHtml(professor)}"` : '';
       const location = formatRoom(event);
       const hideRoomInSuper = superCompressed && duration < 50;
@@ -565,45 +565,21 @@ let printExportInProgress = false;
 
 function exportPdfOnePage() {
   const timetable = els.timetable;
-  const output = els.output;
-  const calendar = els.calendar;
-  if (!timetable || !output || !calendar) throw new Error('Timetable is not available for PDF export.');
+  if (!timetable) throw new Error('Timetable is not available for PDF export.');
 
-  // Snapshot the actual on-screen geometry and the computed grid before entering
-  // print media. The browser is allowed to use a different print viewport, so
-  // preserving these computed values prevents responsive rules from rewriting
-  // Compress / Old Banner column widths and causing cards to overlap.
+  // Snapshot the exact on-screen dimensions before entering print mode. This is
+  // important because the browser's print viewport is a different width from
+  // the live page; using vw/% widths here was causing Compress and Banner mode
+  // to render differently in the PDF.
   const rect = timetable.getBoundingClientRect();
-  const calendarStyle = getComputedStyle(calendar);
-  const sampleCard = timetable.querySelector('.class-card');
-  const sampleCode = timetable.querySelector('.class-code');
-  const sampleTime = timetable.querySelector('.class-time');
-  const sampleRoom = timetable.querySelector('.class-room');
-  const sampleMeta = timetable.querySelector('.class-meta');
   const pxPerMm = 96 / 25.4;
   const printableWidth = (297 - 14) * pxPerMm;
   const printableHeight = (210 - 14) * pxPerMm;
   const scale = Math.min(1, printableWidth / Math.max(1, rect.width), printableHeight / Math.max(1, rect.height));
-  const outputWidth = Math.max(1, rect.width * scale);
-  const outputHeight = Math.max(1, rect.height * scale);
 
   timetable.style.setProperty('--print-width', `${Math.ceil(rect.width)}px`);
   timetable.style.setProperty('--print-height', `${Math.ceil(rect.height)}px`);
   timetable.style.setProperty('--print-scale', String(scale));
-  output.style.setProperty('--print-output-width', `${Math.ceil(outputWidth)}px`);
-  output.style.setProperty('--print-output-height', `${Math.ceil(outputHeight)}px`);
-  timetable.style.setProperty('--print-calendar-columns', calendarStyle.gridTemplateColumns);
-  if (sampleCard) {
-    const cardStyle = getComputedStyle(sampleCard);
-    timetable.style.setProperty('--print-card-padding', cardStyle.padding);
-    timetable.style.setProperty('--print-card-radius', cardStyle.borderRadius);
-    timetable.style.setProperty('--print-card-border-left', cardStyle.borderLeftWidth);
-  }
-  if (sampleCode) timetable.style.setProperty('--print-code-size', getComputedStyle(sampleCode).fontSize);
-  if (sampleTime) timetable.style.setProperty('--print-time-size', getComputedStyle(sampleTime).fontSize);
-  if (sampleRoom) timetable.style.setProperty('--print-room-size', getComputedStyle(sampleRoom).fontSize);
-  if (sampleMeta) timetable.style.setProperty('--print-meta-size', getComputedStyle(sampleMeta).fontSize);
-
   document.body.classList.add('print-export');
   printExportInProgress = true;
 
@@ -625,16 +601,6 @@ els.print.addEventListener('click', () => {
     els.timetable?.style.removeProperty('--print-width');
     els.timetable?.style.removeProperty('--print-height');
     els.timetable?.style.removeProperty('--print-scale');
-    els.timetable?.style.removeProperty('--print-calendar-columns');
-    els.timetable?.style.removeProperty('--print-card-padding');
-    els.timetable?.style.removeProperty('--print-card-radius');
-    els.timetable?.style.removeProperty('--print-card-border-left');
-    els.timetable?.style.removeProperty('--print-code-size');
-    els.timetable?.style.removeProperty('--print-time-size');
-    els.timetable?.style.removeProperty('--print-room-size');
-    els.timetable?.style.removeProperty('--print-meta-size');
-    els.output?.style.removeProperty('--print-output-width');
-    els.output?.style.removeProperty('--print-output-height');
     els.print.disabled = false;
     els.print.textContent = originalText;
     console.error('PDF export failed', error);
@@ -648,16 +614,6 @@ window.addEventListener('afterprint', () => {
   els.timetable?.style.removeProperty('--print-width');
   els.timetable?.style.removeProperty('--print-height');
   els.timetable?.style.removeProperty('--print-scale');
-  els.timetable?.style.removeProperty('--print-calendar-columns');
-  els.timetable?.style.removeProperty('--print-card-padding');
-  els.timetable?.style.removeProperty('--print-card-radius');
-  els.timetable?.style.removeProperty('--print-card-border-left');
-  els.timetable?.style.removeProperty('--print-code-size');
-  els.timetable?.style.removeProperty('--print-time-size');
-  els.timetable?.style.removeProperty('--print-room-size');
-  els.timetable?.style.removeProperty('--print-meta-size');
-  els.output?.style.removeProperty('--print-output-width');
-  els.output?.style.removeProperty('--print-output-height');
   els.print.disabled = false;
   els.print.textContent = 'Export PDF';
 });
