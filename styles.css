@@ -464,7 +464,7 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 .timetable.old-banner .class-time,
 .timetable.old-banner .class-room,
 .timetable.old-banner .class-meta { color: #003399; font-weight: 700; }
-.timetable.old-banner .class-room { position: relative; left: 5px; }
+.timetable.old-banner .class-room { position: relative; left: -2px; }
 .timetable.old-banner .student-name { font-weight: 700; }
 .timetable.old-banner .day-header { font-weight: 700; }
 .timetable.old-banner .class-code { font-weight: 700; }
@@ -783,7 +783,7 @@ html, body { overflow-x: hidden; }
 
 @media (max-width: 900px) {
   .timetable .class-card.short-class .class-details { grid-template-columns: 1fr; }
-  .timetable .class-card.short-class .class-meta { display: none !important; }
+  .timetable .class-card.short-professor-class .class-meta { display: none !important; }
 }
 
 @media (max-width: 600px) {

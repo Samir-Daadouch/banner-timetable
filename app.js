@@ -332,12 +332,13 @@ function renderCalendar(records) {
       const hue = colors.get(family) ?? 210;
       const shortCode = `${event.courseCode} · ${event.section}`;
       const shortClass = (event.end - event.start) < 50;
-      const professor = (shortClass || (event.end - event.start) >= 60) ? shortProfessor(event.instructor) : '';
+      const shortProfessorClass = (event.end - event.start) < 60;
+      const professor = shortProfessor(event.instructor);
       const professorTitle = professor ? `title="${escapeHtml(professor)}"` : '';
       const location = formatRoom(event);
       const hideRoomInSuper = superCompressed && duration < 50;
 
-      card.className = 'class-card' + (duration < 70 ? ' compact' : '') + (duration < 50 ? ' short-class' : '');
+      card.className = 'class-card' + (duration < 70 ? ' compact' : '') + (duration < 50 ? ' short-class' : '') + (duration < 60 ? ' short-professor-class' : '');
       const top = ((event.start - gridStart) / 60) * hourHeight;
       const minimumCardHeight = compressed || superCompressed || mobileWidth ? 34 : tabletWidth ? 46 : 62;
       const height = Math.max(minimumCardHeight, (duration / 60) * hourHeight - (compressed || mobileWidth ? 4 : 8));
