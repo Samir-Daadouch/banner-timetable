@@ -9,6 +9,7 @@ A static, deterministic browser tool developed by Samir Daadouch that converts a
 - Parsing: deterministic JavaScript, no AI/OCR
 - Rendering: independent HTML/CSS calendar
 - Privacy: the PDF is read locally and never uploaded to an application server
+- Calendar export: parsed meetings can be exported as recurring `.ics` events for the detected semester date range
 - Hosting: GitHub Pages compatible
 
 ## Files
@@ -17,6 +18,7 @@ A static, deterministic browser tool developed by Samir Daadouch that converts a
 - `styles.css` — screen + print styling
 - `app.js` — PDF.js loading, file handling, metrics, and calendar renderer
 - `banner-parser.js` — pure Banner parsing/normalization layer
+- `calendar-export.js` — iCalendar export using the parsed timetable data
 - `package.json` — optional local-server/test commands
 - `tests/parser-test.mjs` — deterministic parser regression tests
 

@@ -485,182 +485,72 @@ async function captureTimetable() {
   });
 }
 
+let printExportInProgress = false;
+let printSnapshotUrl = null;
 
-els.calendarExport.addEventListener('click', () => {
-  const parsed = window.__lastParsed || currentParsed;
-  if (!parsed) return;
-  const originalText = els.calendarExport.textContent;
-  els.calendarExport.disabled = true;
-  els.calendarExport.textContent = 'Preparing…';
-  try {
-    const ics = generateIcs(parsed);
-    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-    const term = String(parsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
-    downloadBlob(blob, `banner-timetable-${term}.ics`);
-  } catch (error) {
-    console.error('Calendar export failed', error);
-    els.status.textContent = `Calendar export failed: ${error?.message || 'unknown error'}`;
-  } finally {
-    els.calendarExport.disabled = false;
-    els.calendarExport.textContent = originalText;
+function getPrintSheet() {
+  let sheet = document.querySelector('#pdfPrintSheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'pdfPrintSheet';
+    sheet.setAttribute('aria-hidden', 'true');
+    sheet.innerHTML = '<img id="pdfPrintImage" alt="Timetable" />';
+    document.body.appendChild(sheet);
   }
-});
-
-els.image.addEventListener('click', async () => {
-  if (!window.__lastParsed) return;
-  const originalText = els.image.textContent;
-  els.image.disabled = true;
-  els.image.textContent = 'Preparing image…';
-  try {
-    const canvas = await captureTimetable();
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    if (!blob) throw new Error('Could not create the PNG image.');
-    const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
-    downloadBlob(blob, `banner-timetable-${term}.png`);
-  } catch (error) {
-    console.error('Image export failed', error);
-    els.status.textContent = `Image export failed: ${error?.message || 'unknown error'}`;
-  } finally {
-    els.image.disabled = false;
-    els.image.textContent = originalText;
-  }
-});
-
-els.compress.addEventListener('click', () => {
-  if (els.superCompress && els.timetable.classList.contains('super-compressed')) {
-    els.timetable.classList.remove('super-compressed');
-    els.superCompress.classList.remove('active');
-    els.superCompress.setAttribute('aria-pressed', 'false');
-    els.superCompress.textContent = 'Super compress';
-  }
-  const compressed = els.timetable.classList.toggle('compressed');
-  els.compress.classList.toggle('active', compressed);
-  els.compress.setAttribute('aria-pressed', String(compressed));
-  els.compress.textContent = compressed ? 'Expand' : 'Compress';
-  if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
-});
-
-if (els.superCompress) {
-els.superCompress.addEventListener('click', () => {
-  if (els.timetable.classList.contains('compressed')) {
-    els.timetable.classList.remove('compressed');
-    els.compress.classList.remove('active');
-    els.compress.setAttribute('aria-pressed', 'false');
-    els.compress.textContent = 'Compress';
-  }
-  const active = els.timetable.classList.toggle('super-compressed');
-  els.superCompress.classList.toggle('active', active);
-  els.superCompress.setAttribute('aria-pressed', String(active));
-  els.superCompress.textContent = active ? 'Expand' : 'Super compress';
-  if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
-});
+  return {
+    sheet,
+    image: sheet.querySelector('#pdfPrintImage')
+  };
 }
 
-
-// Export PDF using the browser's native print engine. This intentionally has
-// no third-party PDF dependency, so PDF export cannot fail because a CDN
-// library failed to load. The existing @page / @media print rules force the
-// timetable onto one A4 landscape page.
-let printExportInProgress = false;
-
-function exportPdfOnePage() {
-  const timetable = els.timetable;
-  const output = els.output;
-  const calendar = els.calendar;
-  if (!timetable || !output || !calendar) throw new Error('Timetable is not available for PDF export.');
-
-  // Snapshot the actual on-screen geometry and the computed grid before entering
-  // print media. The browser is allowed to use a different print viewport, so
-  // preserving these computed values prevents responsive rules from rewriting
-  // Compress / Old Banner column widths and causing cards to overlap.
-  const rect = timetable.getBoundingClientRect();
-  const calendarStyle = getComputedStyle(calendar);
-  const sampleCard = timetable.querySelector('.class-card');
-  const sampleCode = timetable.querySelector('.class-code');
-  const sampleTime = timetable.querySelector('.class-time');
-  const sampleRoom = timetable.querySelector('.class-room');
-  const sampleMeta = timetable.querySelector('.class-meta');
-  const pxPerMm = 96 / 25.4;
-  const printableWidth = (297 - 14) * pxPerMm;
-  const printableHeight = (210 - 14) * pxPerMm;
-  const scale = Math.min(1, printableWidth / Math.max(1, rect.width), printableHeight / Math.max(1, rect.height));
-  const outputWidth = Math.max(1, rect.width * scale);
-  const outputHeight = Math.max(1, rect.height * scale);
-
-  timetable.style.setProperty('--print-width', `${Math.ceil(rect.width)}px`);
-  timetable.style.setProperty('--print-height', `${Math.ceil(rect.height)}px`);
-  timetable.style.setProperty('--print-scale', String(scale));
-  output.style.setProperty('--print-output-width', `${Math.ceil(outputWidth)}px`);
-  output.style.setProperty('--print-output-height', `${Math.ceil(outputHeight)}px`);
-  timetable.style.setProperty('--print-calendar-columns', calendarStyle.gridTemplateColumns);
-  if (sampleCard) {
-    const cardStyle = getComputedStyle(sampleCard);
-    timetable.style.setProperty('--print-card-padding', cardStyle.padding);
-    timetable.style.setProperty('--print-card-radius', cardStyle.borderRadius);
-    timetable.style.setProperty('--print-card-border-left', cardStyle.borderLeftWidth);
+function cleanupPrintSnapshot() {
+  const { sheet, image } = getPrintSheet();
+  sheet.classList.remove('ready');
+  image.removeAttribute('src');
+  if (printSnapshotUrl) {
+    URL.revokeObjectURL(printSnapshotUrl);
+    printSnapshotUrl = null;
   }
-  if (sampleCode) timetable.style.setProperty('--print-code-size', getComputedStyle(sampleCode).fontSize);
-  if (sampleTime) timetable.style.setProperty('--print-time-size', getComputedStyle(sampleTime).fontSize);
-  if (sampleRoom) timetable.style.setProperty('--print-room-size', getComputedStyle(sampleRoom).fontSize);
-  if (sampleMeta) timetable.style.setProperty('--print-meta-size', getComputedStyle(sampleMeta).fontSize);
+  printExportInProgress = false;
+  document.body.classList.remove('print-export');
+  els.print.disabled = false;
+  els.print.textContent = 'Export PDF';
+}
 
+async function exportPdfOnePage() {
+  if (!els.timetable) throw new Error('Timetable is not available for PDF export.');
+  const canvas = await captureTimetable();
+  const { sheet, image } = getPrintSheet();
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) throw new Error('Could not create the PDF snapshot.');
+
+  printSnapshotUrl = URL.createObjectURL(blob);
+  image.src = printSnapshotUrl;
+  image.style.aspectRatio = `${Math.max(1, canvas.width)} / ${Math.max(1, canvas.height)}`;
+  sheet.classList.add('ready');
   document.body.classList.add('print-export');
   printExportInProgress = true;
 
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => window.print());
-  });
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  window.print();
 }
 
-els.print.addEventListener('click', () => {
+els.print.addEventListener('click', async () => {
   if (!window.__lastParsed || printExportInProgress) return;
   const originalText = els.print.textContent;
   els.print.disabled = true;
   els.print.textContent = 'Preparing PDF…';
   try {
-    exportPdfOnePage();
+    await exportPdfOnePage();
   } catch (error) {
-    printExportInProgress = false;
-    document.body.classList.remove('exporting', 'print-export');
-    els.timetable?.style.removeProperty('--print-width');
-    els.timetable?.style.removeProperty('--print-height');
-    els.timetable?.style.removeProperty('--print-scale');
-    els.timetable?.style.removeProperty('--print-calendar-columns');
-    els.timetable?.style.removeProperty('--print-card-padding');
-    els.timetable?.style.removeProperty('--print-card-radius');
-    els.timetable?.style.removeProperty('--print-card-border-left');
-    els.timetable?.style.removeProperty('--print-code-size');
-    els.timetable?.style.removeProperty('--print-time-size');
-    els.timetable?.style.removeProperty('--print-room-size');
-    els.timetable?.style.removeProperty('--print-meta-size');
-    els.output?.style.removeProperty('--print-output-width');
-    els.output?.style.removeProperty('--print-output-height');
-    els.print.disabled = false;
-    els.print.textContent = originalText;
     console.error('PDF export failed', error);
     els.status.textContent = `PDF export failed: ${error?.message || 'unknown error'}`;
+    cleanupPrintSnapshot();
+    els.print.textContent = originalText;
   }
 });
 
-window.addEventListener('afterprint', () => {
-  printExportInProgress = false;
-  document.body.classList.remove('exporting', 'print-export');
-  els.timetable?.style.removeProperty('--print-width');
-  els.timetable?.style.removeProperty('--print-height');
-  els.timetable?.style.removeProperty('--print-scale');
-  els.timetable?.style.removeProperty('--print-calendar-columns');
-  els.timetable?.style.removeProperty('--print-card-padding');
-  els.timetable?.style.removeProperty('--print-card-radius');
-  els.timetable?.style.removeProperty('--print-card-border-left');
-  els.timetable?.style.removeProperty('--print-code-size');
-  els.timetable?.style.removeProperty('--print-time-size');
-  els.timetable?.style.removeProperty('--print-room-size');
-  els.timetable?.style.removeProperty('--print-meta-size');
-  els.output?.style.removeProperty('--print-output-width');
-  els.output?.style.removeProperty('--print-output-height');
-  els.print.disabled = false;
-  els.print.textContent = 'Export PDF';
-});
+window.addEventListener('afterprint', cleanupPrintSnapshot);
 
 // Small, non-disruptive help/legal panels.
 const tutorialButton = document.querySelector('#tutorialButton');
