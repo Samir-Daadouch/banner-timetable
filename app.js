@@ -333,7 +333,9 @@ function renderCalendar(records) {
       const shortCode = `${event.courseCode} · ${event.section}`;
       const shortClass = (event.end - event.start) < 50;
       const shortProfessorClass = (event.end - event.start) < 60;
-      const professor = shortProfessor(event.instructor);
+      const isLaptopLike = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      const showProfessor = !shortProfessorClass || isLaptopLike;
+      const professor = showProfessor ? shortProfessor(event.instructor) : '';
       const professorTitle = professor ? `title="${escapeHtml(professor)}"` : '';
       const location = formatRoom(event);
       const hideRoomInSuper = superCompressed && duration < 50;
