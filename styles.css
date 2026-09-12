@@ -905,3 +905,22 @@ html, body { overflow-x: hidden; }
 @media (max-width: 600px) {
   .timetable.old-banner .calendar .class-details { left: 3px; right: 3px; }
 }
+
+
+/* Old Banner-only refinements. No site navigation or non-Old-Banner styles are changed. */
+.timetable.old-banner .calendar .day-header,
+.timetable.old-banner .calendar .time-label,
+.timetable.old-banner .calendar .class-code,
+.timetable.old-banner .calendar .class-time,
+.timetable.old-banner .calendar .class-room,
+.timetable.old-banner .calendar .class-meta {
+  font-weight: 600;
+}
+.timetable.old-banner .calendar .class-code {
+  font-weight: 700;
+}
+.timetable.old-banner .calendar .class-room {
+  position: relative;
+  left: -1px;
+  transform: none;
+}
