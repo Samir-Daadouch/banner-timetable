@@ -273,6 +273,7 @@ function renderCalendar(records) {
   els.calendar.style.setProperty('--hour-count', hourCount);
   els.calendar.style.setProperty('--grid-height', `${gridHeight}px`);
   els.calendar.dataset.mobileDay = activeMobileDay || activeDays[0];
+  document.body.classList.toggle('old-banner-design', activePalette === 'oldBanner');
   els.timetable.classList.toggle('old-banner', activePalette === 'oldBanner');
   els.calendar.innerHTML = '';
 
@@ -331,7 +332,7 @@ function renderCalendar(records) {
       const family = courseFamilyKey(event.courseCode);
       const hue = colors.get(family) ?? 210;
       const shortCode = `${event.courseCode} · ${event.section}`;
-      const professor = (mobileWidth && (event.end - event.start) < 60) ? '' : shortProfessor(event.instructor);
+      const professor = (event.end - event.start) < 60 ? '' : shortProfessor(event.instructor);
       const professorTitle = professor ? `title="${escapeHtml(professor)}"` : '';
       const location = formatRoom(event);
       const hideRoomInSuper = superCompressed && duration < 50;
@@ -466,185 +467,156 @@ function downloadBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
-function copyComputedTextStyles(source, target) {
-  const cs = getComputedStyle(source);
-  const properties = [
-    'font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch',
-    'line-height', 'letter-spacing', 'text-transform', 'text-align',
-    'text-decoration', 'text-overflow', 'white-space', 'color',
-    'background-color', 'background-image', 'background-size', 'background-position',
-    'background-repeat', 'border-top', 'border-right', 'border-bottom', 'border-left',
-    'border-radius', 'box-shadow', 'opacity', 'overflow', 'box-sizing'
-  ];
-  for (const property of properties) {
-    target.style.setProperty(property, cs.getPropertyValue(property));
-  }
-}
-
-function flattenElementForCapture(source, target, sourceRootRect) {
-  const rect = source.getBoundingClientRect();
-  const left = rect.left - sourceRootRect.left;
-  const top = rect.top - sourceRootRect.top;
-
-  target.style.position = 'absolute';
-  target.style.left = `${left}px`;
-  target.style.top = `${top}px`;
-  target.style.width = `${Math.max(0, rect.width)}px`;
-  target.style.height = `${Math.max(0, rect.height)}px`;
-  target.style.margin = '0';
-  target.style.inset = 'auto';
-  target.style.transform = 'none';
-  target.style.flex = 'none';
-  target.style.gridArea = 'auto';
-  target.style.alignSelf = 'auto';
-  target.style.justifySelf = 'auto';
-  target.style.contain = 'none';
-  copyComputedTextStyles(source, target);
-}
-
 async function captureTimetable() {
   const html2canvas = getHtml2Canvas();
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  if (document.fonts?.ready) await document.fonts.ready;
-
-  const source = els.timetable;
-  const sourceRootRect = source.getBoundingClientRect();
-  const width = Math.max(1, sourceRootRect.width);
-  const height = Math.max(1, sourceRootRect.height);
-
-  // html2canvas does not reliably reproduce CSS Grid layout in every browser.
-  // For PDF export, freeze the already-rendered screen geometry into absolute
-  // coordinates first. This makes the export a pixel-faithful snapshot of what
-  // the user is actually seeing, including compressed card details and padding.
-  const stage = document.createElement('div');
-  stage.setAttribute('aria-hidden', 'true');
-  Object.assign(stage.style, {
-    position: 'absolute',
-    left: '-100000px',
-    top: '0',
-    width: `${width}px`,
-    height: `${height}px`,
-    overflow: 'hidden',
-    pointerEvents: 'none',
-    zIndex: '-1'
+  const bounds = els.timetable.getBoundingClientRect();
+  const maxDimension = 30000;
+  const maxSourceDimension = Math.max(1, bounds.width, bounds.height);
+  const deviceScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  const scale = Math.min(12, maxDimension / maxSourceDimension, deviceScale * 6);
+  return html2canvas(els.timetable, {
+    scale: Math.max(4, scale),
+    backgroundColor: getComputedStyle(els.timetable).backgroundColor || '#ffffff',
+    useCORS: true,
+    logging: false,
+    imageTimeout: 10000,
+    removeContainer: true
   });
+}
 
-  const clone = source.cloneNode(true);
-  clone.removeAttribute('id');
-  Object.assign(clone.style, {
-    position: 'absolute',
-    left: '0px',
-    top: '0px',
-    width: `${width}px`,
-    height: `${height}px`,
-    minWidth: `${width}px`,
-    minHeight: `${height}px`,
-    maxWidth: `${width}px`,
-    maxHeight: `${height}px`,
-    margin: '0',
-    overflow: 'hidden'
-  });
-  copyComputedTextStyles(source, clone);
-  stage.appendChild(clone);
-  document.body.appendChild(stage);
 
-  const sourceNodes = [source, ...source.querySelectorAll('*')];
-  const cloneNodes = [clone, ...clone.querySelectorAll('*')];
-  const count = Math.min(sourceNodes.length, cloneNodes.length);
-  for (let i = 0; i < count; i++) {
-    flattenElementForCapture(sourceNodes[i], cloneNodes[i], sourceRootRect);
-  }
-
+els.calendarExport.addEventListener('click', () => {
+  const parsed = window.__lastParsed || currentParsed;
+  if (!parsed) return;
+  const originalText = els.calendarExport.textContent;
+  els.calendarExport.disabled = true;
+  els.calendarExport.textContent = 'Preparing…';
   try {
-    const deviceScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
-    const scale = Math.min(6, Math.max(2, deviceScale * 3));
-    return await html2canvas(clone, {
-      scale,
-      width,
-      height,
-      backgroundColor: getComputedStyle(source).backgroundColor || '#ffffff',
-      useCORS: true,
-      logging: false,
-      imageTimeout: 10000,
-      removeContainer: true
-    });
+    const ics = generateIcs(parsed);
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const term = String(parsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
+    downloadBlob(blob, `banner-timetable-${term}.ics`);
+  } catch (error) {
+    console.error('Calendar export failed', error);
+    els.status.textContent = `Calendar export failed: ${error?.message || 'unknown error'}`;
   } finally {
-    stage.remove();
+    els.calendarExport.disabled = false;
+    els.calendarExport.textContent = originalText;
   }
+});
+
+els.image.addEventListener('click', async () => {
+  if (!window.__lastParsed) return;
+  const originalText = els.image.textContent;
+  els.image.disabled = true;
+  els.image.textContent = 'Preparing image…';
+  try {
+    const canvas = await captureTimetable();
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('Could not create the PNG image.');
+    const term = String(window.__lastParsed.term || 'timetable').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'timetable';
+    downloadBlob(blob, `banner-timetable-${term}.png`);
+  } catch (error) {
+    console.error('Image export failed', error);
+    els.status.textContent = `Image export failed: ${error?.message || 'unknown error'}`;
+  } finally {
+    els.image.disabled = false;
+    els.image.textContent = originalText;
+  }
+});
+
+els.compress.addEventListener('click', () => {
+  if (els.superCompress && els.timetable.classList.contains('super-compressed')) {
+    els.timetable.classList.remove('super-compressed');
+    els.superCompress.classList.remove('active');
+    els.superCompress.setAttribute('aria-pressed', 'false');
+    els.superCompress.textContent = 'Super compress';
+  }
+  const compressed = els.timetable.classList.toggle('compressed');
+  els.compress.classList.toggle('active', compressed);
+  els.compress.setAttribute('aria-pressed', String(compressed));
+  els.compress.textContent = compressed ? 'Expand' : 'Compress';
+  if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
+});
+
+if (els.superCompress) {
+els.superCompress.addEventListener('click', () => {
+  if (els.timetable.classList.contains('compressed')) {
+    els.timetable.classList.remove('compressed');
+    els.compress.classList.remove('active');
+    els.compress.setAttribute('aria-pressed', 'false');
+    els.compress.textContent = 'Compress';
+  }
+  const active = els.timetable.classList.toggle('super-compressed');
+  els.superCompress.classList.toggle('active', active);
+  els.superCompress.setAttribute('aria-pressed', String(active));
+  els.superCompress.textContent = active ? 'Expand' : 'Super compress';
+  if (window.__lastParsed) renderCalendar(window.__lastParsed.records);
+});
 }
 
+
+// Export PDF using the browser's native print engine. This intentionally has
+// no third-party PDF dependency, so PDF export cannot fail because a CDN
+// library failed to load. The existing @page / @media print rules force the
+// timetable onto one A4 landscape page.
 let printExportInProgress = false;
-let printFrame = null;
 
-function cleanupPrintSnapshot() {
-  if (printFrame) {
-    printFrame.remove();
-    printFrame = null;
-  }
-  printExportInProgress = false;
-  els.print.disabled = false;
-  els.print.textContent = 'Export PDF';
-}
+function exportPdfOnePage() {
+  const timetable = els.timetable;
+  if (!timetable) throw new Error('Timetable is not available for PDF export.');
 
-async function exportPdfOnePage() {
-  if (!els.timetable) throw new Error('Timetable is not available for PDF export.');
-  const canvas = await captureTimetable();
-  const dataUrl = canvas.toDataURL('image/png');
+  // Snapshot the exact on-screen dimensions before entering print mode. This is
+  // important because the browser's print viewport is a different width from
+  // the live page; using vw/% widths here was causing Compress and Banner mode
+  // to render differently in the PDF.
+  const rect = timetable.getBoundingClientRect();
+  const pxPerMm = 96 / 25.4;
+  const printableWidth = (297 - 14) * pxPerMm;
+  const printableHeight = (210 - 14) * pxPerMm;
+  const scale = Math.min(1, printableWidth / Math.max(1, rect.width), printableHeight / Math.max(1, rect.height));
 
-  const frame = document.createElement('iframe');
-  frame.setAttribute('aria-hidden', 'true');
-  Object.assign(frame.style, {
-    position: 'fixed',
-    width: '1px',
-    height: '1px',
-    right: '0',
-    bottom: '0',
-    border: '0',
-    opacity: '0',
-    pointerEvents: 'none'
-  });
-  document.body.appendChild(frame);
-  printFrame = frame;
-
-  const doc = frame.contentDocument;
-  doc.open();
-  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>Banner Timetable</title>
-<style>
-@page { size: A4 landscape; margin: 0; }
-html, body { width: 297mm; height: 210mm; margin: 0; padding: 0; overflow: hidden; background: #fff; }
-body { display: flex; align-items: center; justify-content: center; }
-img { display: block; width: 297mm; height: 210mm; max-width: 297mm; max-height: 210mm; object-fit: contain; object-position: center; margin: 0; padding: 0; border: 0; }
-</style></head><body><img id="print-image" alt="Timetable"></body></html>`);
-  doc.close();
-  const image = doc.getElementById('print-image');
-  frame.contentWindow.addEventListener('afterprint', cleanupPrintSnapshot, { once: true });
-  image.src = dataUrl;
-  await new Promise((resolve, reject) => {
-    image.onload = resolve;
-    image.onerror = () => reject(new Error('Could not prepare the PDF snapshot.'));
-  });
+  timetable.style.setProperty('--print-width', `${Math.ceil(rect.width)}px`);
+  timetable.style.setProperty('--print-height', `${Math.ceil(rect.height)}px`);
+  timetable.style.setProperty('--print-scale', String(scale));
+  document.body.classList.add('print-export');
   printExportInProgress = true;
-  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  frame.contentWindow.focus();
-  frame.contentWindow.print();
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => window.print());
+  });
 }
 
-els.print.addEventListener('click', async () => {
+els.print.addEventListener('click', () => {
   if (!window.__lastParsed || printExportInProgress) return;
   const originalText = els.print.textContent;
   els.print.disabled = true;
   els.print.textContent = 'Preparing PDF…';
   try {
-    await exportPdfOnePage();
+    exportPdfOnePage();
   } catch (error) {
+    printExportInProgress = false;
+    document.body.classList.remove('exporting', 'print-export');
+    els.timetable?.style.removeProperty('--print-width');
+    els.timetable?.style.removeProperty('--print-height');
+    els.timetable?.style.removeProperty('--print-scale');
+    els.print.disabled = false;
+    els.print.textContent = originalText;
     console.error('PDF export failed', error);
     els.status.textContent = `PDF export failed: ${error?.message || 'unknown error'}`;
-    cleanupPrintSnapshot();
-    els.print.textContent = originalText;
   }
 });
 
-window.addEventListener('afterprint', cleanupPrintSnapshot);
+window.addEventListener('afterprint', () => {
+  printExportInProgress = false;
+  document.body.classList.remove('exporting', 'print-export');
+  els.timetable?.style.removeProperty('--print-width');
+  els.timetable?.style.removeProperty('--print-height');
+  els.timetable?.style.removeProperty('--print-scale');
+  els.print.disabled = false;
+  els.print.textContent = 'Export PDF';
+});
 
 // Small, non-disruptive help/legal panels.
 const tutorialButton = document.querySelector('#tutorialButton');
