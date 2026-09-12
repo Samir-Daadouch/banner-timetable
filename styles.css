@@ -809,47 +809,40 @@ html, body { overflow-x: hidden; }
 @page { size: A4 landscape; margin: 7mm; }
 @media print {
   html, body {
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow: hidden !important;
+    min-height: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
     background: #fff !important;
-  }
-  body {
-    position: fixed !important;
-    inset: 0 !important;
     print-color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
   }
-  body > .app-shell {
-    position: relative !important;
-    width: 100% !important;
-    height: 100% !important;
+
+  body.print-export > .app-shell {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
     min-height: 0 !important;
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
-  .site-nav,
-  .upload-hero,
-  .status,
-  .toolbar,
-  .info-panel,
-  .error-panel,
-  .no-print {
+
+  body.print-export > .app-shell > *:not(#output) {
     display: none !important;
   }
-  #output {
-    position: absolute !important;
-    inset: 0 !important;
+
+  body.print-export #output {
+    position: relative !important;
     display: block !important;
-    width: 100% !important;
-    height: 100% !important;
+    width: var(--print-output-width) !important;
+    height: var(--print-output-height) !important;
     min-height: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     padding: 0 !important;
     overflow: hidden !important;
     break-before: avoid !important;
@@ -859,16 +852,17 @@ html, body { overflow-x: hidden; }
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
   }
-  #timetable {
-    position: absolute !important;
-    top: 0 !important;
-    left: 50% !important;
+
+  body.print-export #timetable {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
     width: var(--print-width) !important;
     height: var(--print-height) !important;
     max-width: none !important;
     margin: 0 !important;
-    transform: translateX(-50%) scale(var(--print-scale, 1)) !important;
-    transform-origin: top center !important;
+    transform: scale(var(--print-scale, 1)) !important;
+    transform-origin: top left !important;
     zoom: 1 !important;
     overflow: hidden !important;
     break-before: avoid !important;
@@ -877,11 +871,28 @@ html, body { overflow-x: hidden; }
     page-break-before: avoid !important;
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
-    border: 1px solid var(--line-strong) !important;
-    border-radius: 14px !important;
-    box-shadow: var(--shadow) !important;
   }
-  #timetable .day-nav { display: none !important; }
-  #timetable .calendar .day-column { display: block !important; }
-  #timetable .day-grid { overflow: hidden !important; }
+
+  body.print-export #timetable .day-nav,
+  body.print-export .toolbar,
+  body.print-export .no-print {
+    display: none !important;
+  }
+
+  /* Preserve the exact live grid geometry captured before entering print media.
+     This is especially important for Compress, whose cards use percentage-based
+     left/width values inside the calendar grid. */
+  body.print-export #timetable .calendar {
+    grid-template-columns: var(--print-calendar-columns) !important;
+  }
+
+  body.print-export #timetable .class-card {
+    padding: var(--print-card-padding) !important;
+    border-radius: var(--print-card-radius) !important;
+    border-left-width: var(--print-card-border-left) !important;
+  }
+  body.print-export #timetable .class-code { font-size: var(--print-code-size) !important; }
+  body.print-export #timetable .class-time { font-size: var(--print-time-size) !important; }
+  body.print-export #timetable .class-room { font-size: var(--print-room-size) !important; }
+  body.print-export #timetable .class-meta { font-size: var(--print-meta-size) !important; }
 }
