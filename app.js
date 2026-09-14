@@ -164,10 +164,10 @@ function formatRoom(event, compact = false) {
   if (building && new RegExp(`^${building}[\\s-]`, 'i').test(room)) building = '';
 
   if (compact && currentParsed?.isKhalifaUniversity) {
-    const rawBuildingCode = String(event.building || '').replace(/^Building\s+/i, '').trim();
-    const roomStartsWithBuilding = rawBuildingCode && new RegExp(`^${rawBuildingCode}`, 'i').test(room);
+    // Khalifa compact convention: Main Campus always becomes `MC <room>`;
+    // never leave the verbose `Building L` label in the compact card.
     if (/^Main Campus$/i.test(campus)) {
-      return `MC ${roomStartsWithBuilding ? room : [building, room].filter(Boolean).join(' ')}`.trim();
+      return `MC ${room.replace(/^Building\s+[A-Za-z0-9]+\s+/i, '').trim() || room}`.trim();
     }
 
     const campusCodeMatch = campus.match(/^([A-Z0-9]+)\s+Campus$/i);
@@ -410,6 +410,7 @@ function renderPaletteControls() {
 
 function render(parsed, file) {
   window.__lastParsed = parsed;
+  els.timetable.classList.toggle('khalifa-mobile', Boolean(parsed.isKhalifaUniversity));
   els.studentName.textContent = parsed.studentName || 'Student timetable';
   const dates = parsed.records.map(r => `${r.startDate}|${r.endDate}`);
   const sameDates = dates.length > 0 && dates.every(d => d === dates[0]);
