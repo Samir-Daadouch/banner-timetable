@@ -163,19 +163,26 @@ function formatRoom(event, compact = false) {
 
   if (building && new RegExp(`^${building}[\\s-]`, 'i').test(room)) building = '';
 
-  if (compact && currentParsed?.isKhalifaUniversity) {
-    // Khalifa compact convention: Main Campus always becomes `MC <room>`;
-    // never leave the verbose `Building L` label in the compact card.
-    if (/^Main Campus$/i.test(campus)) {
-      return `MC ${room.replace(/^Building\s+[A-Za-z0-9]+\s+/i, '').trim() || room}`.trim();
-    }
-
+  if (currentParsed?.isKhalifaUniversity) {
+    // Khalifa compact convention: SAN is always compact, even in the full desktop
+    // view. Main Campus remains compact only when the caller requests compact mode.
     const campusCodeMatch = campus.match(/^([A-Z0-9]+)\s+Campus$/i);
     const campusCode = campusCodeMatch?.[1] || '';
-    if (campusCode && building && building.toUpperCase() === campusCode.toUpperCase()) {
-      return `${campusCode} ${room}`.trim();
+    const forceSanCompact = /^SAN(?:\s+Campus)?$/i.test(campus);
+
+    if (compact || forceSanCompact) {
+      // Main Campus becomes `MC <room>` in compact mode; never leave the verbose
+      // `Building L` label in the compact card.
+      if (/^Main Campus$/i.test(campus)) {
+        return `MC ${room.replace(/^Building\s+[A-Za-z0-9]+\s+/i, '').trim() || room}`.trim();
+      }
+
+      if (campusCode && building && building.toUpperCase() === campusCode.toUpperCase()) {
+        return `${campusCode} ${room}`.trim();
+      }
+      if (campusCode) campus = campusCode;
+      if (forceSanCompact && /^SAN$/i.test(campus)) return `SAN ${room}`.trim();
     }
-    if (campusCode) campus = campusCode;
   }
 
   if (!includeCampusInCards) campus = '';
