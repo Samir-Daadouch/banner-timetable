@@ -113,6 +113,9 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
 .student-name { font-size: 24px; font-weight: 800; letter-spacing: -.025em; }
 .term-name { color: var(--muted); font-size: 13px; margin-top: 5px; }
 .metrics { display: flex; align-items: stretch; justify-content: flex-end; gap: 0; }
+.metrics-stack { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.metrics-row { display: flex; align-items: stretch; justify-content: flex-end; gap: 0; }
+.campus-summary { color: var(--muted); font-size: 10px; line-height: 1.15; font-weight: 700; letter-spacing: .015em; text-align: right; white-space: normal; }
 .metric { padding: 0 16px; border-left: 1px solid var(--line); min-width: 76px; text-align: right; }
 .metric:first-child { border-left: 0; }
 .metric-value { font-size: 19px; line-height: 1; font-weight: 800; letter-spacing: -.025em; }
@@ -189,6 +192,8 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
   .student-name { font-size: 19px; }
   .term-name { font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .metrics { margin-left: 0; gap: 0; }
+  .metrics-stack { align-items: flex-end; gap: 6px; max-width: 55%; }
+  .campus-summary { font-size: 9px; text-align: right; }
   .metric { padding: 0 7px; min-width: 45px; }
   .metric:first-child { padding-left: 0; }
   .metric-value { font-size: 15px; }
@@ -222,6 +227,8 @@ h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.01; letter-spa
   .drop-zone { min-height: 92px; }
   .timetable-head { grid-template-columns: 1fr; gap: 8px; }
   .metrics { justify-content: flex-start; }
+  .metrics-stack { align-items: flex-start; max-width: 100%; }
+  .campus-summary { text-align: left; }
   .metric { text-align: left; border-left: 0; padding-left: 0; padding-right: 14px; }
   .metric-label { margin-top: 3px; }
   .calendar { grid-template-columns: 46px 1fr; }

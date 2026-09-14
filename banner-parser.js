@@ -150,7 +150,11 @@ function lineHasDays(line) { return DAY_LINE_RE.test(clean(line?.text)); }
 function lineHasLocation(line) {
   const text = clean(line?.text);
   if (!text || lineHasDays(line) || lineHasTime(line) || lineHasDate(line)) return false;
-  return LOCATION_START_RE.test(text) || /^(?:[A-Z][^,]+),\s*[^,]+$/i.test(text);
+  if (LOCATION_START_RE.test(text)) return true;
+  const parts = text.split(',').map(clean).filter(Boolean);
+  if (parts.length === 2) return /^[A-Z][^,]*$/i.test(parts[0]) && /\d|Room\b/i.test(parts[1]);
+  if (parts.length >= 3) return /\d/.test(parts.at(-1));
+  return false;
 }
 
 function isHeaderCandidate(line, nearbyLines = []) {
@@ -239,7 +243,8 @@ function parseLocation(text) {
   const parts = value.split(',').map(clean).filter(Boolean);
   if (parts.length === 1) return { campus: '', building: '', room: parts[0] };
   if (parts.length === 2) return { campus: '', building: parts[0], room: parts[1] };
-  return { campus: parts[0], building: parts.slice(0, -1).join(', '), room: parts.at(-1) };
+  if (parts.length === 3) return { campus: parts[0], building: parts[1], room: parts[2] };
+  return { campus: parts[0], building: parts.slice(1, -1).join(', '), room: parts.at(-1) };
 }
 
 function looksLikeInstructor(line) {

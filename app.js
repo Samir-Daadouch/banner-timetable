@@ -47,6 +47,7 @@ const els = {
 
 const DAY_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_SHORT = { Sunday: 'Sun', Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat' };
+const AUS_RE = /American University of Sharjah|\bAUS\b/i;
 
 const PALETTES = {
   blue:   { label: 'Blue', hues: [202, 218, 234, 250, 266, 194, 226, 242] },
@@ -102,46 +103,48 @@ function uniqueCourseCount(records) {
   return new Set(records.map(r => courseFamilyKey(r.courseCode))).size;
 }
 
+function campusInfo(parsed) {
+  const aus = AUS_RE.test(`${parsed.university || ''} ${parsed.studentName || ''} ${parsed.pageData?.[0]?.text || ''}`);
+  const campuses = [...new Set((parsed.records || [])
+    .map(record => String(record.campus || '').trim())
+    .filter(Boolean))];
+  return { aus, campuses, showSummary: !aus && campuses.length > 0, multiCampus: campuses.length > 1 };
+}
+
 function renderMetrics(parsed) {
   const meetings = parsed.records.flatMap(r => r.days.map(day => ({ day, start: minutesFromTime(r.startTime), end: minutesFromTime(r.endTime) })));
   const days = [...new Set(meetings.map(m => m.day))].sort((a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b));
-  const earliest = Math.min(...meetings.map(m => m.start));
-  const latest = Math.max(...meetings.map(m => m.end));
   const credits = parsed.registeredCredits ?? parsed.calculatedCredits;
   const metrics = [
     ['credits', String(Number.isInteger(credits) ? credits : Number(credits).toFixed(1)), 'Credits'],
     ['courses', String(uniqueCourseCount(parsed.records)), 'Courses'],
     ['days', String(days.length), 'Days']
   ];
-  els.metrics.innerHTML = metrics.map(([_, value, label]) =>
+  const info = campusInfo(parsed);
+  const campusMarkup = info.showSummary
+    ? `<div class="campus-summary">${escapeHtml(info.campuses.join(' · '))}</div>`
+    : '';
+  els.metrics.innerHTML = `<div class="metrics-stack">${campusMarkup}<div class="metrics-row">${metrics.map(([_, value, label]) =>
     `<div class="metric"><div class="metric-value">${escapeHtml(value)}</div><div class="metric-label">${escapeHtml(label)}</div></div>`
-  ).join('');
+  ).join('')}</div></div>`;
 }
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 }
 
-function formatRoom(event) {
+function formatRoom(event, compact = false) {
   let campus = String(event.campus || '').trim();
   let building = String(event.building || '').trim();
   let room = String(event.room || '').trim().replace(/\s*-\s*/g, ' - ');
 
-  // Banner location text is verbose. Keep the useful building abbreviation and
-  // room while removing campus-level prose for normal universities. Khalifa
-  // University is the exception: keep the campus/building context when present.
-  const includeCampus = Boolean(currentParsed?.isKhalifaUniversity);
+  const info = campusInfo(currentParsed || {});
+  const includeCampusInCards = !info.aus && info.multiCampus;
+
   building = building
     .replace(/^Main Campus,\s*/i, '')
     .replace(/^Main Campus\s*/i, '')
     .trim();
-  if (includeCampus && campus) {
-    // Keep Khalifa campus context, while still presenting the normalized
-    // building name and room.
-    campus = campus.trim();
-  } else {
-    campus = '';
-  }
 
   const buildingAliases = [
     [/^Engineering Building Left$/i, 'ELB'],
@@ -158,10 +161,24 @@ function formatRoom(event) {
     if (pattern.test(building)) { building = alias; break; }
   }
 
-  // Some room numbers already carry the building code (e.g. "EB2-109"), which
-  // would otherwise duplicate the abbreviation we just prefixed.
   if (building && new RegExp(`^${building}[\\s-]`, 'i').test(room)) building = '';
 
+  if (compact && currentParsed?.isKhalifaUniversity) {
+    const rawBuildingCode = String(event.building || '').replace(/^Building\s+/i, '').trim();
+    const roomStartsWithBuilding = rawBuildingCode && new RegExp(`^${rawBuildingCode}(?:\\b|[- ]|$)`, 'i').test(room);
+    if (/^Main Campus$/i.test(campus)) {
+      return `MC ${roomStartsWithBuilding ? room : [building, room].filter(Boolean).join(' ')}`.trim();
+    }
+
+    const campusCodeMatch = campus.match(/^([A-Z0-9]+)\s+Campus$/i);
+    const campusCode = campusCodeMatch?.[1] || '';
+    if (campusCode && building && building.toUpperCase() === campusCode.toUpperCase()) {
+      return `${campusCode} ${room}`.trim();
+    }
+    if (campusCode) campus = campusCode;
+  }
+
+  if (!includeCampusInCards) campus = '';
   return [campus, building, room].filter(Boolean).join(' ').trim() || 'Location not listed';
 }
 
@@ -337,7 +354,7 @@ function renderCalendar(records) {
       const showProfessor = !shortProfessorClass || isLaptopLike;
       const professor = showProfessor ? shortProfessor(event.instructor) : '';
       const professorTitle = professor ? `title="${escapeHtml(professor)}"` : '';
-      const location = formatRoom(event);
+      const location = formatRoom(event, compressed || superCompressed || tabletWidth);
       const hideRoomInSuper = superCompressed && duration < 50;
 
       card.className = 'class-card' + (duration < 70 ? ' compact' : '') + (duration < 50 ? ' short-class' : '') + (duration < 60 ? ' short-professor-class' : '');
@@ -419,12 +436,8 @@ async function handleFile(file) {
   try {
     const pages = await extractPdf(file);
     const parsed = parseBanner(pages);
-  currentParsed = parsed;
-    if (parsed.records.length !== 8) {
-      els.status.textContent = `Parsed ${parsed.records.length} validated course blocks. Review the timetable before printing.`;
-    } else {
-      els.status.textContent = '';
-    }
+    currentParsed = parsed;
+    els.status.textContent = '';
     render(parsed, file);
   } catch (error) {
     console.error('Banner PDF parsing failed', error);
