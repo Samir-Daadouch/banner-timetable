@@ -165,7 +165,7 @@ function formatRoom(event, compact = false) {
 
   if (compact && currentParsed?.isKhalifaUniversity) {
     const rawBuildingCode = String(event.building || '').replace(/^Building\s+/i, '').trim();
-    const roomStartsWithBuilding = rawBuildingCode && new RegExp(`^${rawBuildingCode}(?:\\b|[- ]|$)`, 'i').test(room);
+    const roomStartsWithBuilding = rawBuildingCode && new RegExp(`^${rawBuildingCode}`, 'i').test(room);
     if (/^Main Campus$/i.test(campus)) {
       return `MC ${roomStartsWithBuilding ? room : [building, room].filter(Boolean).join(' ')}`.trim();
     }
